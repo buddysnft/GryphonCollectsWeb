@@ -13,12 +13,12 @@ export default function BreaksPage() {
   useEffect(() => {
     async function loadBreaks() {
       try {
-        const fetchedBreaks = await getBreaks([
-          where("isActive", "==", true),
-          where("date", ">=", Timestamp.now()),
-          orderBy("date", "asc"),
-        ]);
-        setBreaks(fetchedBreaks);
+        // Fetch all breaks, filter on client side
+        const allBreaks = await getBreaks([]);
+        const upcoming = allBreaks
+          .filter(b => b.isActive && b.date.seconds * 1000 > Date.now())
+          .sort((a, b) => a.date.seconds - b.date.seconds);
+        setBreaks(upcoming);
       } catch (error) {
         console.error("Error loading breaks:", error);
       } finally {

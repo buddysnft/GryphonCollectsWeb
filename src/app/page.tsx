@@ -17,23 +17,21 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Fetch featured products
-        const products = await getProducts([
-          where("isFeatured", "==", true),
-          where("isActive", "==", true),
-          limitQuery(4),
-        ]);
+        // Fetch all products, filter on client side
+        const allProducts = await getProducts([]);
+        const featured = allProducts
+          .filter(p => p.isFeatured && p.isActive)
+          .slice(0, 4);
 
-        // Fetch upcoming breaks
-        const breaks = await getBreaks([
-          where("isActive", "==", true),
-          where("date", ">=", Timestamp.now()),
-          orderBy("date", "asc"),
-          limitQuery(3),
-        ]);
+        // Fetch all breaks, filter on client side
+        const allBreaks = await getBreaks([]);
+        const upcoming = allBreaks
+          .filter(b => b.isActive && b.date.seconds * 1000 > Date.now())
+          .sort((a, b) => a.date.seconds - b.date.seconds)
+          .slice(0, 3);
 
-        setFeaturedProducts(products);
-        setUpcomingBreaks(breaks);
+        setFeaturedProducts(featured);
+        setUpcomingBreaks(upcoming);
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
