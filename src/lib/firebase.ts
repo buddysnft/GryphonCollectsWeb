@@ -1,7 +1,7 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,10 +12,27 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase (only once)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Check if we're in a browser environment and have valid config
+const isConfigValid = typeof window !== 'undefined' && 
+  firebaseConfig.apiKey && 
+  firebaseConfig.projectId;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Initialize Firebase (only once, and only in browser with valid config)
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
+
+if (isConfigValid) {
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
+  }
+}
+
+export { auth, db, storage };
 export default app;

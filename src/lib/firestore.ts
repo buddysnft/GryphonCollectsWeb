@@ -19,12 +19,14 @@ import type { Product, Break, User, Order, Notification } from "./types";
 
 // Products
 export async function getProducts(constraints: QueryConstraint[] = []) {
+  if (!db) return [];
   const q = query(collection(db, brandConfig.collections.products), ...constraints);
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
 }
 
 export async function getProduct(id: string) {
+  if (!db) return null;
   const docRef = doc(db, brandConfig.collections.products, id);
   const docSnap = await getDoc(docRef);
   return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Product : null;
