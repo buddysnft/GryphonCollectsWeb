@@ -1,15 +1,41 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { getBreaks } from "@/lib/firestore";
 import { where, orderBy, Timestamp } from "firebase/firestore";
 import BreakCard from "@/components/BreakCard";
+import type { Break } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export default function BreaksPage() {
+  const [breaks, setBreaks] = useState<Break[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function BreaksPage() {
-  const breaks = await getBreaks([
-    where("isActive", "==", true),
-    where("date", ">=", Timestamp.now()),
-    orderBy("date", "asc"),
-  ]);
+  useEffect(() => {
+    async function loadBreaks() {
+      try {
+        const fetchedBreaks = await getBreaks([
+          where("isActive", "==", true),
+          where("date", ">=", Timestamp.now()),
+          orderBy("date", "asc"),
+        ]);
+        setBreaks(fetchedBreaks);
+      } catch (error) {
+        console.error("Error loading breaks:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadBreaks();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-text-secondary">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8 px-4">

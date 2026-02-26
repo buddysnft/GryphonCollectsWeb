@@ -1,27 +1,56 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { getProducts, getBreaks } from "@/lib/firestore";
 import { where, orderBy, limit as limitQuery, Timestamp } from "firebase/firestore";
 import ProductCard from "@/components/ProductCard";
 import BreakCard from "@/components/BreakCard";
 import { brandConfig } from "@/config/brand";
+import type { Product, Break } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export default function Home() {
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [upcomingBreaks, setUpcomingBreaks] = useState<Break[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function Home() {
-  // Fetch featured products
-  const featuredProducts = await getProducts([
-    where("isFeatured", "==", true),
-    where("isActive", "==", true),
-    limitQuery(4),
-  ]);
+  useEffect(() => {
+    async function loadData() {
+      try {
+        // Fetch featured products
+        const products = await getProducts([
+          where("isFeatured", "==", true),
+          where("isActive", "==", true),
+          limitQuery(4),
+        ]);
 
-  // Fetch upcoming breaks
-  const upcomingBreaks = await getBreaks([
-    where("isActive", "==", true),
-    where("date", ">=", Timestamp.now()),
-    orderBy("date", "asc"),
-    limitQuery(3),
-  ]);
+        // Fetch upcoming breaks
+        const breaks = await getBreaks([
+          where("isActive", "==", true),
+          where("date", ">=", Timestamp.now()),
+          orderBy("date", "asc"),
+          limitQuery(3),
+        ]);
+
+        setFeaturedProducts(products);
+        setUpcomingBreaks(breaks);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-text-secondary">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
