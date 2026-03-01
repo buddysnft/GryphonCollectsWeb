@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, loading } = useAuth();
+  const { user, userData, loading } = useAuth();
 
   return (
     <nav className="bg-surface border-b border-border sticky top-0 z-50">
@@ -34,6 +34,11 @@ export default function Navbar() {
             {!loading && user && (
               <Link href="/account" className="text-text-secondary hover:text-primary transition">
                 Account
+              </Link>
+            )}
+            {!loading && userData?.role === "admin" && (
+              <Link href="/admin" className="text-primary hover:text-primary-hover font-semibold transition">
+                Admin
               </Link>
             )}
             {!loading && !user && (
@@ -107,6 +112,15 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Account
+              </Link>
+            )}
+            {!loading && userData?.role === "admin" && (
+              <Link
+                href="/admin"
+                className="block px-4 py-2 text-primary hover:text-primary-hover font-semibold hover:bg-surface-hover rounded transition"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Admin
               </Link>
             )}
             {!loading && !user && (
