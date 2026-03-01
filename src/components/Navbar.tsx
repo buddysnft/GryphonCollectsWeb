@@ -9,6 +9,18 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, userData, loading } = useAuth();
 
+  // Debug logging (remove after testing)
+  if (typeof window !== 'undefined' && user) {
+    console.log('Navbar Debug:', {
+      userEmail: user.email,
+      userData,
+      hasRole: !!userData?.role,
+      roleValue: userData?.role,
+      isAdmin: userData?.role === "admin",
+      loading
+    });
+  }
+
   return (
     <nav className="bg-surface border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
