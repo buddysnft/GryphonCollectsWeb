@@ -67,7 +67,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
-            <Badge variant="primary">{product.category}</Badge>
+            <Badge variant="primary">{product.category.toUpperCase()}</Badge>
             {product.gradeCompany && product.gradeValue && (
               <Badge variant="primary">
                 {product.gradeCompany} {product.gradeValue}

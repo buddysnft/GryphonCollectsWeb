@@ -124,7 +124,7 @@ export default function AdminProductsPage() {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <Badge variant="primary">{product.category}</Badge>
+                  <Badge variant="primary">{product.category.toUpperCase()}</Badge>
                 </td>
                 <td className="px-6 py-4 text-text-primary">${product.price.toFixed(2)}</td>
                 <td className="px-6 py-4 text-text-secondary">{product.quantity}</td>

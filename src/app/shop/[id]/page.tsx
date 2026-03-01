@@ -136,7 +136,7 @@ export default function ProductDetailPage() {
           {/* Info */}
           <div>
             <div className="flex flex-wrap gap-2 mb-4">
-              <Badge variant="primary">{product.category}</Badge>
+              <Badge variant="primary">{product.category.toUpperCase()}</Badge>
               {product.gradeCompany && product.gradeValue && (
                 <Badge variant="primary">
                   {product.gradeCompany} {product.gradeValue}

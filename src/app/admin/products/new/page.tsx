@@ -159,11 +159,11 @@ export default function NewProductPage() {
                 onChange={(e) => setForm({ ...form, category: e.target.value as Product["category"] })}
                 className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text-primary focus:border-primary focus:outline-none"
               >
-                <option value="Boxes">Boxes</option>
-                <option value="Cases">Cases</option>
-                <option value="Singles">Singles</option>
-                <option value="Slabs">Slabs</option>
-                <option value="Merch">Merch</option>
+                <option value="BOXES">BOXES</option>
+                <option value="CASES">CASES</option>
+                <option value="SINGLES">SINGLES</option>
+                <option value="SLABS">SLABS</option>
+                <option value="MERCH">MERCH</option>
               </select>
             </div>
 
