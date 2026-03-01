@@ -1,101 +1,204 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getOrders, updateOrder } from "@/lib/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import type { Order } from "@/lib/types";
-import Badge from "@/components/Badge";
 
-export default function AdminOrdersPage() {
+// Status color mapping
+const STATUS_COLORS: Record<Order["status"], string> = {
+  pending: "bg-yellow-500/20 text-yellow-500 border-yellow-500",
+  confirmed: "bg-blue-500/20 text-blue-500 border-blue-500",
+  shipped: "bg-green-500/20 text-green-500 border-green-500",
+  delivered: "bg-gray-500/20 text-gray-500 border-gray-500",
+  held: "bg-purple-500/20 text-purple-500 border-purple-500",
+};
+
+const STATUS_LABELS: Record<Order["status"], string> = {
+  pending: "Pending",
+  confirmed: "Confirmed",
+  shipped: "Shipped",
+  delivered: "Delivered",
+  held: "Held for Pickup",
+};
+
+export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
 
   useEffect(() => {
     loadOrders();
   }, []);
 
-  const loadOrders = async () => {
+  async function loadOrders() {
     try {
-      const allOrders = await getOrders();
-      setOrders(allOrders);
+      const querySnapshot = await getDocs(collection(db, "orders"));
+      const loadedOrders = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Order[];
+      
+      // Sort by date (newest first)
+      loadedOrders.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+      
+      setOrders(loadedOrders);
     } catch (error) {
       console.error("Error loading orders:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleStatusChange = async (orderId: string, newStatus: Order["status"]) => {
+  async function updateOrderStatus(orderId: string, newStatus: Order["status"]) {
+    setUpdating(orderId);
+    
     try {
-      await updateOrder(orderId, { status: newStatus });
-      setOrders(orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
+      const orderRef = doc(db, "orders", orderId);
+      
+      if (newStatus === "shipped") {
+        // Prompt for tracking number
+        const trackingNumber = prompt("Enter tracking number:");
+        if (!trackingNumber) {
+          setUpdating(null);
+          return;
+        }
+        
+        await updateDoc(orderRef, {
+          status: newStatus,
+          trackingNumber,
+        });
+      } else if (newStatus === "held") {
+        // Mark as held for pickup
+        await updateDoc(orderRef, {
+          status: newStatus,
+          holdForPickup: true,
+        });
+      } else {
+        await updateDoc(orderRef, {
+          status: newStatus,
+        });
+      }
+      
+      // Reload orders
+      await loadOrders();
     } catch (error) {
       console.error("Error updating order:", error);
+      alert("Failed to update order status");
+    } finally {
+      setUpdating(null);
     }
-  };
+  }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-text-secondary">Loading orders...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-text-secondary">Loading orders...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold text-primary mb-8">Orders</h1>
+    <div className="min-h-screen bg-background py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Orders</h1>
+          <p className="text-text-secondary">{orders.length} total orders</p>
+        </div>
 
-      <div className="bg-surface border border-border rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-background border-b border-border">
-            <tr>
-              <th className="text-left px-6 py-4 text-text-secondary font-semibold">Order ID</th>
-              <th className="text-left px-6 py-4 text-text-secondary font-semibold">Date</th>
-              <th className="text-left px-6 py-4 text-text-secondary font-semibold">Total</th>
-              <th className="text-left px-6 py-4 text-text-secondary font-semibold">Status</th>
-              <th className="text-left px-6 py-4 text-text-secondary font-semibold">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} className="border-b border-border hover:bg-surface-hover">
-                <td className="px-6 py-4 text-text-primary font-mono">#{order.id.slice(0, 8)}</td>
-                <td className="px-6 py-4 text-text-secondary">
-                  {order.createdAt.toDate().toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 text-primary font-bold">${order.total.toFixed(2)}</td>
-                <td className="px-6 py-4">
-                  <Badge
-                    variant={
-                      order.status === "delivered"
-                        ? "success"
-                        : order.status === "shipped"
-                        ? "primary"
-                        : "default"
-                    }
-                  >
-                    {order.status.toUpperCase()}
-                  </Badge>
-                </td>
-                <td className="px-6 py-4">
-                  <select
-                    value={order.status}
-                    onChange={(e) => handleStatusChange(order.id, e.target.value as Order["status"])}
-                    className="bg-background border border-border rounded px-3 py-1 text-text-primary text-sm focus:border-primary focus:outline-none"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {orders.length === 0 && (
-          <div className="text-center py-12 text-text-muted">No orders yet</div>
+        {orders.length === 0 ? (
+          <div className="bg-surface rounded-xl p-12 text-center">
+            <p className="text-text-secondary text-lg">No orders yet</p>
+          </div>
+        ) : (
+          <div className="bg-surface rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-text-primary">
+                      Order ID
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-text-primary">
+                      Customer
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-text-primary">
+                      Items
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-text-primary">
+                      Total
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-text-primary">
+                      Status
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-text-primary">
+                      Tracking
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-text-primary">
+                      Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order.id} className="border-b border-border hover:bg-surface-hover">
+                      <td className="px-6 py-4 text-sm text-text-primary font-mono">
+                        {order.id.slice(0, 8)}
+                      </td>
+                      
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-text-primary">
+                          {order.shippingAddress.street}
+                        </div>
+                        <div className="text-xs text-text-secondary">
+                          {order.shippingAddress.city}, {order.shippingAddress.state}
+                        </div>
+                      </td>
+                      
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-text-secondary">
+                          {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                        </div>
+                      </td>
+                      
+                      <td className="px-6 py-4 font-semibold text-text-primary">
+                        ${order.total.toFixed(2)}
+                      </td>
+                      
+                      <td className="px-6 py-4">
+                        <select
+                          value={order.status}
+                          onChange={(e) => updateOrderStatus(order.id, e.target.value as Order["status"])}
+                          disabled={updating === order.id}
+                          className={`px-3 py-1 rounded-full text-sm font-medium border ${STATUS_COLORS[order.status]} bg-transparent cursor-pointer disabled:opacity-50`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="held">Held for Pickup</option>
+                        </select>
+                      </td>
+                      
+                      <td className="px-6 py-4">
+                        {order.trackingNumber ? (
+                          <span className="text-sm text-primary font-mono">
+                            {order.trackingNumber}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-text-secondary">—</span>
+                        )}
+                      </td>
+                      
+                      <td className="px-6 py-4 text-sm text-text-secondary">
+                        {order.createdAt.toDate().toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
     </div>
