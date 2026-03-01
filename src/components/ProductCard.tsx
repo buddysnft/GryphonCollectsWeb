@@ -7,8 +7,31 @@ interface ProductCardProps {
   product: Product;
 }
 
+// Helper to ensure Firebase Storage URLs are in the correct format
+function normalizeImageUrl(url: string): string {
+  try {
+    // If URL already has the correct format, return as-is
+    if (url.includes('alt=media') && !url.includes('token=')) {
+      return url;
+    }
+    
+    // Extract storage path from URL
+    const match = url.match(/\/o\/([^?]+)/);
+    if (match) {
+      const encodedPath = match[1];
+      return `https://firebasestorage.googleapis.com/v0/b/gryphon-breaks.firebasestorage.app/o/${encodedPath}?alt=media`;
+    }
+    
+    // If URL format is unexpected, return original (will fall back to placeholder)
+    return url;
+  } catch {
+    return url;
+  }
+}
+
 export default function ProductCard({ product }: ProductCardProps) {
   const hasImage = product.imageURLs && product.imageURLs.length > 0;
+  const imageUrl = hasImage ? normalizeImageUrl(product.imageURLs[0]) : '';
   const isOnSale = product.originalPrice !== null && product.originalPrice > product.price;
   const isSoldOut = product.quantity === 0;
 
@@ -19,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="relative aspect-square bg-background">
           {hasImage ? (
             <Image
-              src={product.imageURLs[0]}
+              src={imageUrl}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition"

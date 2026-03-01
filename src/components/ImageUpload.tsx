@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 
 interface ImageUploadProps {
@@ -34,13 +34,14 @@ export default function ImageUpload({ onUploadComplete }: ImageUploadProps) {
     try {
       // Create unique filename
       const filename = `${Date.now()}-${file.name}`;
-      const storageRef = ref(storage, `products/${filename}`);
+      const storagePath = `products/${filename}`;
+      const storageRef = ref(storage, storagePath);
 
       // Upload file
       await uploadBytes(storageRef, file);
 
-      // Get download URL
-      const downloadURL = await getDownloadURL(storageRef);
+      // Construct download URL manually (avoid broken token from getDownloadURL)
+      const downloadURL = `https://firebasestorage.googleapis.com/v0/b/gryphon-breaks.firebasestorage.app/o/${encodeURIComponent(storagePath)}?alt=media`;
 
       onUploadComplete(downloadURL);
     } catch (err: any) {
