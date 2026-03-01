@@ -6,16 +6,17 @@ export interface Product {
   description: string;
   price: number;
   originalPrice: number | null;
-  category: "Boxes" | "Cases" | "Singles" | "Slabs" | "Merch";
+  saleEndDate: Timestamp | null; // For flash sales with countdown
+  category: "BOXES" | "CASES" | "SINGLES" | "SLABS" | "MERCH";
   sport: "Soccer" | "Merch";
   brand: string | null;
   year: string | null;
   player: string | null;
   team: string | null;
-  gradeCompany: "PSA" | "BGS" | "SGC" | null;
+  gradeCompany: "None" | "PSA" | "BGS" | "SGC" | null;
   gradeValue: string | null;
   quantity: number;
-  imageURLs: string[];
+  imageURLs: string[]; // Up to 5 images
   tags: string[];
   isFeatured: boolean;
   isActive: boolean;
@@ -32,9 +33,12 @@ export interface Break {
   totalSpots: number;
   claimedSpots: number;
   breakFormat: "Pick Your Team" | "Pick Your Player" | "Random" | "Hit Draft";
+  teams: string[] | null; // For PYT breaks
+  players: string[] | null; // For PYP breaks
   imageURL: string | null;
   youtubeURL: string | null;
   instagramURL: string | null;
+  status: "upcoming" | "live" | "completed";
   isActive: boolean;
   notifyList: string[];
   participants: string[];
@@ -68,7 +72,9 @@ export interface Order {
     quantity: number;
   }[];
   total: number;
-  status: "pending" | "confirmed" | "shipped" | "delivered";
+  status: "pending" | "confirmed" | "shipped" | "delivered" | "held";
+  trackingNumber: string | null;
+  holdForPickup: boolean;
   shippingAddress: {
     street: string;
     apt: string;
@@ -82,8 +88,11 @@ export interface Order {
 
 export interface Notification {
   id: string;
+  type: "New Product" | "Break Going Live" | "Flash Sale" | "Custom";
   title: string;
   body: string;
+  sentTo: "all" | "break-subscribers";
+  breakId?: string; // If sentTo == "break-subscribers"
   createdAt: Timestamp;
 }
 
