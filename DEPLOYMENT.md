@@ -1,250 +1,167 @@
-# Gryphon Collects - Deployment Instructions
+# Deployment Checklist
 
-## 🎯 What's Built
+## Pre-Deployment
 
-A complete white-label e-commerce platform for card breakers with:
+### 1. Environment Variables
+- [ ] All required env vars set in Vercel dashboard
+- [ ] `.env.local` never committed to git
+- [ ] API keys rotated if previously exposed
 
-**Customer Storefront:**
-- Home page with featured products + upcoming breaks
-- Shop with filters, search, sort
-- Product detail pages with add-to-cart
-- Shopping cart (localStorage, Stripe coming later)
-- Breaks schedule with live links (YouTube/Instagram)
-- User authentication (Firebase)
-- Account management (profile, address, order history)
+### 2. Security
+- [ ] Firestore security rules deployed: `firebase deploy --only firestore:rules`
+- [ ] Storage security rules deployed: `firebase deploy --only storage:rules`
+- [ ] Admin users configured in Firestore (`role: admin`)
+- [ ] No hardcoded secrets in source code
 
-**Admin Dashboard:**
-- Product management with **Firebase Storage image upload**
-- Order management with status updates
-- Notification composer (UI ready, FCM integration later)
-- Dashboard with real-time stats
+### 3. Code Quality
+- [ ] TypeScript build passes: `npm run build`
+- [ ] No console.errors in production code (except in error handlers)
+- [ ] All TODO comments reviewed
+- [ ] Zod schemas added for all user inputs
 
-**White-Label Features:**
-- All branding controlled via `src/config/brand.ts`
-- Easy color customization in `src/app/globals.css`
-- Shared Firebase backend with iOS app
-- One image upload → appears in website + app instantly
+### 4. Testing
+- [ ] Manual test: Sign up / Sign in flow
+- [ ] Manual test: Browse products
+- [ ] Manual test: View breaks
+- [ ] Manual test: Admin dashboard (if admin)
+- [ ] Test on mobile (Chrome DevTools)
 
----
+### 5. Firebase
+- [ ] Firestore indexes created (check console warnings)
+- [ ] Storage bucket configured
+- [ ] Auth providers enabled (Email/Password, Google, etc.)
+- [ ] Firebase pricing plan adequate (Spark vs Blaze)
 
-## 🚀 Deploy to Vercel (Recommended)
+### 6. Git
+- [ ] All changes committed
+- [ ] Branch pushed to GitHub
+- [ ] PR reviewed (if applicable)
+- [ ] Merged to `main`
 
-### Option 1: Deploy via Vercel Dashboard
+## Deployment Process
 
-1. Go to https://vercel.com/new
-2. Import Git Repository → Create new GitHub repo
-3. Repository name: `buddysnft/GryphonCollectsWeb`
-4. Push this code to that repo
-5. Vercel will auto-deploy
+### Vercel Automatic Deployment
 
-### Option 2: Deploy via Vercel CLI
+1. **Push to main:**
+   ```bash
+   git push origin main
+   ```
+
+2. **Monitor deployment:**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Check deployment status
+   - View build logs if errors
+
+3. **Verify deployment:**
+   - Visit production URL
+   - Test critical paths
+   - Check Firebase console for errors
+
+### Manual Deployment (if needed)
 
 ```bash
-cd ~/Desktop/gryphon-collects-web
-npm install -g vercel
-vercel --prod
+# Build locally first
+npm run build
+
+# Deploy to Vercel
+npx vercel --prod
 ```
 
-Follow the prompts - it will create the GitHub repo automatically.
+## Post-Deployment
 
----
+### 1. Smoke Tests
+- [ ] Homepage loads
+- [ ] Shop page loads products
+- [ ] Breaks page loads breaks
+- [ ] Auth works (sign in/sign up)
+- [ ] Admin dashboard accessible (for admins)
 
-## 🔥 Firebase Setup (CRITICAL)
+### 2. Monitoring
+- [ ] Check Vercel deployment logs
+- [ ] Check Firebase console for errors
+- [ ] Check browser console for JS errors
+- [ ] Verify no broken images
 
-### Step 1: Add Web App to Firebase Project
+### 3. User Communication
+- [ ] Notify client (Gryphon) deployment is complete
+- [ ] Send test link if major changes
+- [ ] Document any breaking changes
 
-1. Go to https://console.firebase.google.com
-2. Select project: **gryphon-breaks**
-3. Click ⚙️ (Settings) → Project Settings
-4. Scroll to "Your apps" → Click **Add app** → Select **Web** (</>) icon
-5. App nickname: "Gryphon Collects Web"
-6. ✅ **Check "Also set up Firebase Hosting"** (optional but recommended)
-7. Click **Register app**
+## Rollback Procedure
 
-### Step 2: Get Web App Config
+If deployment breaks:
 
-Firebase will show you config values like:
+1. **Quick rollback:**
+   - Vercel Dashboard → Deployments → Previous deployment → "Promote to Production"
 
-```javascript
-const firebaseConfig = {
-  apiKey: "AIza...",
-  authDomain: "gryphon-breaks.firebaseapp.com",
-  projectId: "gryphon-breaks",
-  storageBucket: "gryphon-breaks.firebasestorage.app",
-  messagingSenderId: "1056424347369",
-  appId: "1:1056424347369:web:XXXXXXX"
-};
-```
-
-### Step 3: Update Environment Variables
-
-**In Vercel Dashboard:**
-1. Go to your deployed project → Settings → Environment Variables
-2. Add these variables:
-
-```
-NEXT_PUBLIC_FIREBASE_API_KEY=<from config above>
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=gryphon-breaks.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=gryphon-breaks
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=gryphon-breaks.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=1056424347369
-NEXT_PUBLIC_FIREBASE_APP_ID=<from config above>
-```
-
-3. Redeploy the project
-
-**Or in `.env.local` (if running locally):**
-
-Update the file with the real values, then restart dev server.
-
----
-
-## 🔑 Set Up Admin Access
-
-To give Gryphon admin access:
-
-1. Have Gryphon sign up at your deployed site (e.g., gryphon-collects.vercel.app/signup)
-2. Go to Firebase Console → Firestore Database
-3. Find the `users` collection
-4. Find Gryphon's user document (by email)
-5. Click Edit → Add field:
-   - Field: `role`
-   - Type: `string`
-   - Value: `admin`
-6. Save
-
-Now Gryphon can access `/admin` routes.
-
----
-
-## 📸 Add Logo & Assets
-
-1. Find the logo in the iOS project:
-   - `~/Desktop/GryphonBreaks/GryphonBreaks/Assets.xcassets/GryphonLogo.imageset/*.png`
-
-2. Copy to the website:
+2. **Code rollback:**
    ```bash
-   cp ~/Desktop/GryphonBreaks/GryphonBreaks/Assets.xcassets/GryphonLogo.imageset/*.png ~/Desktop/gryphon-collects-web/public/logo.png
+   git revert HEAD
+   git push origin main
    ```
 
-3. Copy app icon for favicon:
-   ```bash
-   cp ~/Desktop/GryphonBreaks/GryphonBreaks/Assets.xcassets/AppIcon.appiconset/*.png ~/Desktop/gryphon-collects-web/public/favicon.png
-   ```
+3. **Notify stakeholders**
 
-4. Commit and push:
-   ```bash
-   cd ~/Desktop/gryphon-collects-web
-   git add public/*
-   git commit -m "Add logo and favicon"
-   git push
-   ```
+## Emergency Contacts
 
-Vercel will auto-redeploy with the new assets.
+- **Developer:** JA (apps@teambuddys.com)
+- **Client:** Gryphon (Gryphoncollecting@gmail.com)
+- **Vercel Support:** [vercel.com/support](https://vercel.com/support)
+- **Firebase Support:** [firebase.google.com/support](https://firebase.google.com/support)
+
+## Regular Maintenance
+
+### Weekly
+- [ ] Check Vercel deployment status
+- [ ] Review Firebase usage/costs
+- [ ] Check for security updates: `npm audit`
+
+### Monthly
+- [ ] Update dependencies: `npm update`
+- [ ] Review error logs (once Sentry integrated)
+- [ ] Backup Firestore data (manual export from console)
+
+### Quarterly
+- [ ] Review Firebase security rules
+- [ ] Rotate API keys (if compromised)
+- [ ] Performance audit
+- [ ] Accessibility audit
+
+## Known Issues
+
+1. **Stripe not connected** — Payment flow is stubbed
+2. **No automated tests** — Manual testing only
+3. **No staging environment** — Test in dev, deploy to prod
+4. **Schema mismatches** — iOS/web use different field names (being fixed)
 
 ---
 
-## 🎨 White-Label Rebrand Guide
+## Quick Commands Reference
 
-To rebrand for a different breaker:
+```bash
+# Local development
+npm run dev
 
-1. **Update `src/config/brand.ts`:**
-   ```typescript
-   export const brandConfig = {
-     businessName: "New Breaker Name",
-     tagline: "Your tagline here",
-     social: {
-       instagram: "https://instagram.com/newbreaker",
-       // ... etc
-     },
-     colors: {
-       primary: "#yourcolor", // Change gold to their brand color
-       // ...
-     },
-   };
-   ```
+# Type check
+npm run type-check
 
-2. **Update colors in `src/app/globals.css`:**
-   ```css
-   :root {
-     --primary: #yourcolor;
-   }
-   ```
+# Build
+npm run build
 
-3. **Replace logo/favicon in `public/`**
+# Deploy Firebase rules
+firebase deploy --only firestore:rules,storage:rules
 
-4. **Update Firebase project in `.env`** (if using different backend)
+# Manual Vercel deploy
+npx vercel --prod
 
-5. **Commit, push, deploy**
+# Check Firebase config
+firebase projects:list
+firebase use <project-id>
 
-That's it - entire site rebranded in ~5 minutes!
+# View Vercel logs
+npx vercel logs <deployment-url>
+```
 
----
+## Support
 
-## ✅ Testing Checklist
-
-### Storefront
-- [ ] Home page loads with products from Firestore
-- [ ] Shop filters and search work
-- [ ] Product detail pages load
-- [ ] Add to cart works
-- [ ] Cart shows items
-- [ ] Login/signup work
-- [ ] Account page shows user data
-- [ ] Responsive on mobile
-
-### Admin (after setting role=admin)
-- [ ] Dashboard shows stats
-- [ ] Can add product with image upload
-- [ ] Image appears in Firebase Storage
-- [ ] Product appears in shop instantly
-- [ ] Can edit/delete products
-- [ ] Orders page shows orders
-- [ ] Notifications page saves to Firestore
-
----
-
-## 🐛 Troubleshooting
-
-**"Firebase Auth error"**
-- Check that web app is registered in Firebase Console
-- Check environment variables are set correctly
-- Make sure `.env.local` values match Firebase config
-
-**"Admin routes redirect to home"**
-- Check that user has `role: "admin"` field in Firestore users collection
-- Clear browser cache and sign in again
-
-**"Images not uploading"**
-- Check Firebase Storage rules allow writes
-- Check that storage bucket name is correct in env vars
-
-**"Products not showing"**
-- Check Firebase Firestore has `products` collection with data
-- Check that products have `isActive: true`
-
----
-
-## 📝 Next Steps (Future Sprints)
-
-- [ ] Stripe integration for checkout
-- [ ] Break scheduling UI in admin
-- [ ] Firebase Cloud Functions for FCM push notifications
-- [ ] Email notifications for orders
-- [ ] Advanced product search/filters
-- [ ] Product image gallery (multiple images)
-- [ ] Break participant management
-- [ ] Custom domain (gryphoncollects.com)
-
----
-
-## 📞 Support
-
-Built by Danya (OpenClaw) for JA.
-
-Any issues? Check:
-1. Vercel deployment logs
-2. Browser console for errors
-3. Firebase Console for auth/database issues
-
-The site is built to scale - once Gryphon's instance is live, spinning up new breaker sites is just a rebrand + deploy.
+Questions? Check [README.md](./README.md) or contact JA.

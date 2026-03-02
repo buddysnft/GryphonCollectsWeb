@@ -1,295 +1,335 @@
-# Gryphon Collects - E-Commerce Website + Admin Dashboard
+# Gryphon Collects Web
 
-A white-label e-commerce platform for sports card breakers. Built with Next.js, TypeScript, and Firebase.
-
-**Live Demo:** (Deploy to get URL)
-
----
-
-## 🎯 Features
-
-### Customer-Facing
-- 🛍️ Product catalog with advanced filtering
-- 🎬 Break scheduling and live stream links
-- 🛒 Shopping cart (Stripe integration coming soon)
-- 👤 User accounts with order history
-- 📱 Fully responsive design
-- 🔥 Real-time sync with iOS app
-
-### Admin Dashboard
-- 📦 Product management with Firebase Storage image upload
-- 📋 Order management with status tracking
-- 🔔 Push notification composer
-- 📊 Real-time stats dashboard
-- ⚡ One upload → instant sync to website + iOS app
-
-### White-Label Ready
-- 🎨 Easy rebranding via config files
-- 🔄 Shared Firebase backend
-- 🚀 Deploy new breaker sites in minutes
-- 💰 No per-site infrastructure costs
-
----
-
-## 🏗️ Tech Stack
-
-- **Framework:** Next.js 15 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS (dark theme)
-- **Backend:** Firebase (Auth, Firestore, Storage)
-- **Deployment:** Vercel
-- **Future:** Stripe payments, FCM push notifications
-
----
+E-commerce platform for soccer card breaking built with Next.js 14, TypeScript, Tailwind CSS, and Firebase.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- Firebase project (gryphon-breaks)
-- Vercel account (free tier works)
 
-### Installation
+- Node.js 18+ and npm
+- Firebase project (Firestore, Auth, Storage)
+- Vercel account (for deployment)
 
-```bash
-# Clone the repo
-git clone https://github.com/buddysnft/GryphonCollectsWeb.git
-cd GryphonCollectsWeb
+### Local Development
 
-# Install dependencies
-npm install
+1. **Clone and install:**
+   ```bash
+   git clone https://github.com/buddysnft/GryphonCollectsWeb.git
+   cd GryphonCollectsWeb
+   npm install
+   ```
 
-# Copy environment variables
-cp .env.local.example .env.local
+2. **Set up environment variables:**
+   ```bash
+   cp .env.example .env.local
+   ```
+   Fill in your Firebase credentials in `.env.local`
 
-# Edit .env.local with your Firebase config
-
-# Run development server
-npm run dev
-
-# Open http://localhost:3000
-```
-
-### Deploy to Vercel
-
-```bash
-npm install -g vercel
-vercel --prod
-```
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for full instructions.
-
----
+3. **Run development server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000)
 
 ## 📁 Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── page.tsx           # Home page
-│   ├── shop/              # Product catalog
-│   ├── breaks/            # Break schedule
-│   ├── cart/              # Shopping cart
-│   ├── account/           # User account
-│   ├── login/             # Authentication
-│   └── admin/             # Admin dashboard
-├── components/            # Reusable React components
-├── lib/                   # Firebase & utilities
-│   ├── firebase.ts        # Firebase initialization
-│   ├── firestore.ts       # Database helpers
-│   ├── auth-context.tsx   # Auth provider
-│   └── cart.ts            # Cart logic
-├── config/                # White-label configuration
-│   └── brand.ts           # 🎨 REBRAND HERE
-└── styles/
-    └── globals.css        # 🎨 COLORS HERE
+├── app/              # Next.js 14 app router pages
+│   ├── admin/        # Admin dashboard
+│   ├── breaks/       # Break listings and details
+│   ├── shop/         # Product catalog
+│   └── account/      # User profile and orders
+├── components/       # React components
+├── lib/              # Utilities and services
+│   ├── firebase.ts   # Firebase initialization
+│   ├── firestore.ts  # Firestore operations
+│   ├── validation.ts # Zod schemas
+│   └── errors.ts     # Error handling
+└── config/           # Configuration files
 ```
 
----
+## 🔐 Environment Variables
 
-## 🎨 Rebrand for New Breaker
+Required variables (see `.env.example`):
 
-1. **Update `src/config/brand.ts`:**
-   - Change `businessName`, `tagline`
-   - Update social links
-   - Modify `colors.primary` (gold → their brand color)
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API key |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase app ID |
 
-2. **Update `src/app/globals.css`:**
-   - Change CSS color variables
+Optional (for production):
+- `STRIPE_SECRET_KEY` - Stripe secret key
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key
+- `NEXT_PUBLIC_SENTRY_DSN` - Sentry error tracking DSN
 
-3. **Replace logo files:**
-   - `public/logo.png`
-   - `public/favicon.png`
+## 🔧 Firebase Setup
 
-4. **Deploy:**
+### 1. Firestore Security Rules
+
+Deploy security rules:
+```bash
+firebase deploy --only firestore:rules
+```
+
+Rules are defined in `firestore.rules`. Key access controls:
+- **Users:** Can read all, write own profile
+- **Products/Breaks:** Read-only for public, write for admins
+- **Orders:** Read own orders, write via Cloud Functions only
+
+### 2. Storage Rules
+
+Deploy storage rules:
+```bash
+firebase deploy --only storage:rules
+```
+
+Rules in `storage.rules` enforce:
+- 5MB max image size
+- Images only (no other file types)
+- User profile images: own + admins
+- Product/break images: admins only
+
+### 3. Admin Access
+
+Grant admin role to a user:
+```typescript
+// In Firestore console or via script
+await db.collection('users').doc(userId).update({ role: 'admin' });
+```
+
+Admin emails (hardcoded):
+- `apps@teambuddys.com`
+- `Gryphoncollecting@gmail.com`
+
+## 🚢 Deployment
+
+### Vercel (Production)
+
+1. **Connect GitHub repo:**
+   - Go to [vercel.com](https://vercel.com)
+   - Import `buddysnft/GryphonCollectsWeb`
+
+2. **Add environment variables:**
+   - In Vercel dashboard → Settings → Environment Variables
+   - Add all `NEXT_PUBLIC_*` variables from `.env.local`
+
+3. **Deploy:**
    ```bash
-   git commit -am "Rebrand for [New Breaker]"
-   git push
+   git push origin main
    ```
+   Vercel auto-deploys on every push to `main`
 
-That's it! Entire site rebranded in 5 minutes.
-
----
-
-## 🔑 Admin Access
-
-To grant admin access to a user:
-
-1. User signs up at `/signup`
-2. Go to Firebase Console → Firestore
-3. Find user document in `users` collection
-4. Add field: `role: "admin"`
-5. User can now access `/admin`
-
----
-
-## 📸 Image Upload Flow
-
-When Gryphon uploads a product image in admin:
-
-1. Image → Firebase Storage (`products/` folder)
-2. Download URL → Firestore `products` collection (`imageURLs` array)
-3. **Website displays image immediately**
-4. **iOS app reads same Firestore doc → displays image**
-
-**One upload = both platforms updated instantly** ⚡
-
----
-
-## 🔥 Firebase Collections
-
-### `products`
-```typescript
-{
-  name: string
-  description: string
-  price: number
-  originalPrice: number | null
-  category: "Boxes" | "Cases" | "Singles" | "Slabs" | "Merch"
-  sport: "Soccer" | "Merch"
-  brand: string | null
-  year: string | null
-  player: string | null
-  team: string | null
-  gradeCompany: "PSA" | "BGS" | "SGC" | null
-  gradeValue: string | null
-  quantity: number
-  imageURLs: string[]
-  tags: string[]
-  isFeatured: boolean
-  isActive: boolean
-  createdAt: Timestamp
-  updatedAt: Timestamp
-}
-```
-
-### `breaks`
-```typescript
-{
-  title: string
-  description: string
-  date: Timestamp
-  pricePerSpot: number
-  totalSpots: number
-  claimedSpots: number
-  breakFormat: "Pick Your Team" | "Pick Your Player" | "Random" | "Hit Draft"
-  imageURL: string | null
-  youtubeURL: string | null
-  instagramURL: string | null
-  isActive: boolean
-  notifyList: string[]
-  participants: string[]
-  createdAt: Timestamp
-}
-```
-
-### `users`
-```typescript
-{
-  email: string
-  displayName: string
-  photoURL: string | null
-  role?: "admin"
-  shippingAddress: object | null
-  createdAt: Timestamp
-}
-```
-
-### `orders`
-```typescript
-{
-  userId: string
-  items: Array<{productId, productName, price, quantity}>
-  total: number
-  status: "pending" | "confirmed" | "shipped" | "delivered"
-  shippingAddress: object
-  createdAt: Timestamp
-}
-```
-
----
-
-## 🛠️ Development
+### Manual Deployment
 
 ```bash
-# Run dev server
-npm run dev
+npm run build
+npx vercel --prod
+```
 
-# Build for production
+## 📊 Database Schema
+
+### Collections
+
+**users**
+```typescript
+{
+  uid: string;
+  email: string;
+  displayName?: string;
+  username?: string;
+  role: "user" | "admin";
+  shippingAddress?: Address;
+  socials?: { instagram?, youtube?, tiktok? };
+  createdAt: Timestamp;
+}
+```
+
+**products**
+```typescript
+{
+  name: string;
+  description?: string;
+  price: number;
+  originalPrice?: number;
+  category: "boxes" | "cases" | "singles" | "slabs" | "merch";
+  sport: "soccer" | "basketball" | etc.;
+  brand?: string;
+  year?: string;
+  quantity: number;
+  imageURLs: string[];
+  tags: string[];
+  isFeatured: boolean;
+  isActive: boolean;
+}
+```
+
+**breaks**
+```typescript
+{
+  title: string;
+  description: string;
+  date: Timestamp;
+  pricePerSpot: number;
+  totalSpots: number;
+  claimedSpots: number;
+  breakFormat: "Pick Your Team" | "Random" | etc.;
+  teams?: string[];
+  imageURL?: string;
+  youtubeURL?: string;
+  status: "upcoming" | "live" | "completed";
+  isActive: boolean;
+  notifyList: string[]; // user IDs
+  participants: string[]; // user IDs
+}
+```
+
+**orders**
+```typescript
+{
+  userId: string;
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+  shippingAddress: Address;
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  paymentIntentId?: string;
+  trackingNumber?: string;
+  createdAt: Timestamp;
+}
+```
+
+## 🛠️ Admin Features
+
+Access admin dashboard at `/admin` (requires `role: admin`):
+
+- **Products:** Add, edit, delete products
+- **Breaks:** Manage upcoming breaks
+- **Orders:** View and update order status
+- **Notifications:** Send push notifications to users
+- **Analytics:** Revenue, top products, user growth
+
+## 🧪 Testing
+
+```bash
+# Run type check
+npm run type-check
+
+# Build check
 npm run build
 
-# Run production build locally
-npm start
-
-# Lint
+# Linting
 npm run lint
 ```
 
+## 🐛 Error Handling
+
+All errors are handled through `src/lib/errors.ts`:
+
+- **AppError classes:** ValidationError, AuthError, NotFoundError, etc.
+- **Firebase error formatting:** User-friendly messages for auth/Firestore errors
+- **Error logging:** Centralized with `logError()` (integrates with Sentry)
+- **Safe async wrapper:** `safeAsync()` for consistent error handling
+
+Example:
+```typescript
+import { safeAsync, ValidationError } from "@/lib/errors";
+
+const result = await safeAsync(async () => {
+  const data = validateOrThrow(userSchema, input);
+  return await createUser(data);
+});
+
+if (!result.success) {
+  toast.error(result.error.message);
+}
+```
+
+## 🔒 Security Checklist
+
+- [x] Environment variables not committed (`.env.local` in `.gitignore`)
+- [x] Firestore security rules deployed
+- [x] Storage security rules deployed
+- [x] Input validation with Zod schemas
+- [x] Admin-only routes protected
+- [x] User data access controlled
+- [ ] Rate limiting on auth endpoints (TODO: implement in Cloud Functions)
+- [ ] CAPTCHA on contact forms (TODO)
+- [ ] Stripe webhook signature verification (TODO when Stripe live)
+
+## 📈 Monitoring & Logging
+
+### Current
+- Console logging with structured error data
+- Firebase error codes formatted for users
+
+### TODO (when ready)
+- [ ] Sentry integration for error tracking
+- [ ] PostHog/Plausible for analytics
+- [ ] Firebase Performance Monitoring
+- [ ] Uptime monitoring (UptimeRobot/Checkly)
+
+## 🚦 Health Checks
+
+No dedicated health endpoint yet. Monitor:
+- Vercel deployment status: [https://vercel.com/dashboard](https://vercel.com/dashboard)
+- Firebase status: [https://status.firebase.google.com](https://status.firebase.google.com)
+
+## 📞 Support
+
+- **Developer:** JA (@buddysnft)
+- **Client:** Gryphon (@gryphoncollects)
+- **Issues:** [GitHub Issues](https://github.com/buddysnft/GryphonCollectsWeb/issues)
+
+## 📝 License
+
+Private repository. All rights reserved.
+
 ---
 
-## 📦 Deployment
+## Common Tasks
 
-### Vercel (Recommended)
+### Add a new admin
+```typescript
+// Via Firebase Console → Firestore
+users/{userId} → update field: role = "admin"
+```
 
-Vercel auto-deploys on `git push` to main branch.
+### Seed test data
+```bash
+npm run seed
+```
 
-1. Connect GitHub repo to Vercel
-2. Add Firebase environment variables
-3. Deploy
+### Deploy security rules
+```bash
+firebase deploy --only firestore:rules,storage:rules
+```
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for details.
+### Check build locally
+```bash
+npm run build
+npm start
+```
 
----
+### Reset database (DANGER)
+Only in development:
+```typescript
+// Delete all docs in a collection via Firebase Console
+// Or use Firebase CLI: firebase firestore:delete --recursive
+```
 
-## 🚧 Roadmap
+## Tech Debt / Known Issues
 
-- [x] Product catalog
-- [x] Shopping cart (localStorage)
-- [x] User authentication
-- [x] Admin dashboard
-- [x] Firebase Storage image upload
-- [x] Order management
-- [ ] Stripe checkout integration
-- [ ] Break scheduling UI
-- [ ] Firebase Cloud Functions for FCM
-- [ ] Email notifications
-- [ ] Advanced search/filters
-- [ ] Product reviews
-- [ ] Wishlist
-- [ ] Custom domain
+1. **Stripe integration incomplete** — payment flow stubbed
+2. **No automated tests** — manual testing only
+3. **No staging environment** — dev → prod only
+4. **Schema changes not versioned** — Firestore rules in git, but no migration system
+5. **No rate limiting** — vulnerable to abuse (mitigated by Firebase Auth + rules)
 
----
-
-## 📄 License
-
-MIT
-
----
-
-## 👨‍💻 Built By
-
-Danya (OpenClaw) for JA  
-February 2026
-
-**White-label platform for card breakers.**  
-One codebase → infinite breaker sites.
+See [GitHub Issues](https://github.com/buddysnft/GryphonCollectsWeb/issues) for full backlog.

@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isValidImageSize() {
+      return request.resource.size < 5 * 1024 * 1024; // 5MB max
+    }
+    
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Product images (admin only)
+    match /product_images/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImageSize() && isValidImageType();
+    }
+    
+    // Break images (admin only)
+    match /break_images/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImageSize() && isValidImageType();
+    }
+    
+    // User profile images
+    match /profile_images/{userId}/{imageId} {
+      allow read: if true;
+      allow write: if (isOwner(userId) || isAdmin()) && 
+                      isValidImageSize() && 
+                      isValidImageType();
+    }
+    
+    // Break result images (admin only)
+    match /break_results/{breakId}/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImageSize() && isValidImageType();
+    }
+    
+    // Default: deny all access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
