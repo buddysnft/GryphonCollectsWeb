@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Product Images</title>
+  <style>
+    body { font-family: system-ui; max-width: 600px; margin: 50px auto; padding: 20px; }
+    button { background: #d4a843; color: #000; border: none; padding: 15px 30px; font-size: 16px; border-radius: 8px; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #result { margin-top: 20px; padding: 15px; border-radius: 8px; }
+    .success { background: #22c55e20; color: #22c55e; }
+    .error { background: #ef444420; color: #ef4444; }
+  </style>
+</head>
+<body>
+  <h1>Add Placeholder Images</h1>
+  <p>This will add placeholder images to products without images.</p>
+  <button id="addBtn" onclick="addImages()">Add Placeholder Images</button>
+  <div id="result"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    import { getFirestore, collection, getDocs, updateDoc, doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWPo0e5k-RcJGN9wQj_vWmPCpNKyMJh3k",
+      authDomain: "gryphon-breaks.firebaseapp.com",
+      projectId: "gryphon-breaks",
+      storageBucket: "gryphon-breaks.firebasestorage.app",
+      messagingSenderId: "667883968094",
+      appId: "1:667883968094:web:6f6d36cb05f0c7ad1b31b3",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const productImages = {
+      "6bXP2BZg0szsOYYAzFSM": ["https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&auto=format&fit=crop&q=80"],
+      "7d7CVS94vijK92xRP2Aa": ["https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80"],
+      "8a0CtPvlTpBkETmT7Lrw": ["https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80"],
+      "Cjzm4O3whwzCt3XQX5Uv": ["https://images.unsplash.com/photo-1614632537423-1e6c2e7e0aae?w=800&auto=format&fit=crop&q=80"],
+    };
+
+    window.addImages = async function() {
+      const btn = document.getElementById('addBtn');
+      const result = document.getElementById('result');
+      
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      result.textContent = '';
+      result.className = '';
+
+      try {
+        // Sign in as admin first
+        const email = prompt('Admin Email:', 'apps@teambuddys.com');
+        if (!email) {
+          throw new Error('Email required');
+        }
+        
+        const password = prompt('Admin Password:');
+        if (!password) {
+          throw new Error('Password required');
+        }
+
+        await signInWithEmailAndPassword(auth, email, password);
+        
+        btn.textContent = 'Adding images...';
+
+        const productsRef = collection(db, "products");
+        const snapshot = await getDocs(productsRef);
+        let updated = 0;
+
+        for (const docSnap of snapshot.docs) {
+          const productId = docSnap.id;
+          const product = docSnap.data();
+
+          if (product.imageURLs && product.imageURLs.length > 0) {
+            continue;
+          }
+
+          const imageURLs = productImages[productId] || [
+            `https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80&sig=${productId.slice(0, 8)}`,
+          ];
+
+          await updateDoc(doc(db, "products", productId), {
+            imageURLs,
+            updatedAt: new Date(),
+          });
+
+          updated++;
+        }
+
+        result.className = 'success';
+        result.textContent = `✅ Success! Added placeholder images to ${updated} products.`;
+      } catch (error) {
+        result.className = 'error';
+        result.textContent = `❌ Error: ${error.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Add Placeholder Images';
+      }
+    };
+  </script>
+</body>
+</html>

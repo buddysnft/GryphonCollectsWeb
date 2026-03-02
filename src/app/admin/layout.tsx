@@ -7,9 +7,11 @@ import { brandConfig } from "@/config/brand";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
+  { href: "/admin/analytics", label: "Analytics", icon: "📈" },
   { href: "/admin/products", label: "Products", icon: "📦" },
   { href: "/admin/breaks", label: "Breaks", icon: "🎬" },
-  { href: "/admin/orders", label: "Orders", icon: "📋" },
+  { href: "/admin/checklists", label: "Checklists", icon: "📋" },
+  { href: "/admin/orders", label: "Orders", icon: "📦" },
   { href: "/admin/notifications", label: "Notifications", icon: "🔔" },
 ];
 
