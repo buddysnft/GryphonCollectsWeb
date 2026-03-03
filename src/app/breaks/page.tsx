@@ -73,6 +73,17 @@ export default function BreaksPage() {
               </svg>
               Instagram Live
             </a>
+            <a
+              href="https://whatnot.com/user/gryphoncollects"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            >
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              Whatnot
+            </a>
           </div>
         </div>
 
