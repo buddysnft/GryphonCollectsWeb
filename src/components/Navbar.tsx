@@ -9,28 +9,8 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, userData, loading } = useAuth();
 
-  // Debug logging (remove after testing)
-  if (typeof window !== 'undefined' && user) {
-    console.log('Navbar Debug:', {
-      userEmail: user.email,
-      userData,
-      hasRole: !!userData?.role,
-      roleValue: userData?.role,
-      isAdmin: userData?.role === "admin",
-      loading
-    });
-  }
-
   return (
-    <>
-      {/* TEMPORARY DEBUG - REMOVE AFTER FIXING */}
-      {user && (
-        <div style={{backgroundColor: '#ffeb3b', color: '#000', padding: '8px', fontSize: '12px', fontFamily: 'monospace'}}>
-          <strong>DEBUG:</strong> {user.email} | Role: "{userData?.role || 'NONE'}" | isAdmin: {String(userData?.role === 'admin')}
-        </div>
-      )}
-      
-      <nav className="bg-surface border-b border-border sticky top-0 z-50">
+    <nav className="bg-surface border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}

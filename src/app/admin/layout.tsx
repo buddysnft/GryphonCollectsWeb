@@ -24,10 +24,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Sidebar */}
         <aside className="w-64 bg-surface border-r border-border">
           <div className="p-6">
-            <div className="text-primary font-bold text-xl mb-8">
-              {brandConfig.businessName}
-              <span className="block text-text-muted text-sm font-normal mt-1">Admin Panel</span>
-            </div>
+            <Link href="/admin" className="block mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-background font-bold text-xl">
+                  G
+                </div>
+                <div>
+                  <div className="text-primary font-bold text-lg">
+                    {brandConfig.businessName}
+                  </div>
+                  <div className="text-text-muted text-xs">Admin Panel</div>
+                </div>
+              </div>
+            </Link>
 
             <nav className="space-y-1">
               {navItems.map((item) => {
