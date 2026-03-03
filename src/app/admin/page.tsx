@@ -122,10 +122,10 @@ export default function AdminDashboard() {
             Add Product
           </Link>
           <Link
-            href="/admin/breaks/new"
+            href="/admin/breaks/templates"
             className="bg-primary text-background px-4 py-3 rounded-lg font-semibold text-center hover:opacity-90 transition"
           >
-            Schedule Break
+            Break Templates
           </Link>
           <Link
             href="/admin/notifications"
