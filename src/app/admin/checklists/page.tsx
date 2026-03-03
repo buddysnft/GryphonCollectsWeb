@@ -73,8 +73,28 @@ export default function ChecklistsPage() {
     try {
       if (!db) throw new Error("Firestore not initialized");
 
+      // Validate required fields
+      if (!formData.productName.trim()) {
+        alert("Product name is required");
+        return;
+      }
+      if (!formData.league.trim()) {
+        alert("League is required");
+        return;
+      }
+
+      // Filter out empty lines from teams
+      const cleanedTeams = formData.teams.filter(t => t.trim()).map(t => t.trim());
+      
+      if (cleanedTeams.length === 0) {
+        alert("At least one team is required");
+        return;
+      }
+
       const data = {
         ...formData,
+        teams: cleanedTeams,
+        players: (formData.players || []).filter(p => p.trim()).map(p => p.trim()),
         updatedAt: Timestamp.now()
       };
 
@@ -89,9 +109,9 @@ export default function ChecklistsPage() {
 
       setShowModal(false);
       loadChecklists();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving checklist:", error);
-      alert("Failed to save checklist");
+      alert(`Failed to save checklist: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -244,21 +264,31 @@ export default function ChecklistsPage() {
                 <label className="block text-text-secondary mb-2">Teams (one per line)</label>
                 <textarea
                   value={formData.teams.join("\n")}
-                  onChange={(e) => setFormData({ ...formData, teams: e.target.value.split("\n").filter(t => t.trim()) })}
-                  className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text-primary h-48"
+                  onChange={(e) => {
+                    // Don't filter out empty lines while typing - only filter on save
+                    const lines = e.target.value.split("\n");
+                    setFormData({ ...formData, teams: lines });
+                  }}
+                  className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text-primary h-48 font-mono"
                   placeholder="Arsenal&#10;Chelsea&#10;Liverpool"
+                  rows={10}
                 />
-                <div className="text-text-muted text-sm mt-1">{formData.teams.length} teams</div>
+                <div className="text-text-muted text-sm mt-1">{formData.teams.filter(t => t.trim()).length} teams</div>
               </div>
 
               <div>
                 <label className="block text-text-secondary mb-2">Players (optional, one per line)</label>
                 <textarea
                   value={(formData.players || []).join("\n")}
-                  onChange={(e) => setFormData({ ...formData, players: e.target.value.split("\n").filter(p => p.trim()) })}
-                  className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text-primary h-32"
+                  onChange={(e) => {
+                    const lines = e.target.value.split("\n");
+                    setFormData({ ...formData, players: lines });
+                  }}
+                  className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text-primary h-32 font-mono"
                   placeholder="Bukayo Saka&#10;Cole Palmer"
+                  rows={6}
                 />
+                <div className="text-text-muted text-sm mt-1">{(formData.players || []).filter(p => p.trim()).length} players</div>
               </div>
             </div>
 
