@@ -19,6 +19,8 @@ export default function AdminNotificationsPage() {
       await addNotification({
         title,
         body,
+        type: "Custom",
+        sentTo: "all",
         createdAt: Timestamp.now(),
       });
 

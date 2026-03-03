@@ -69,6 +69,11 @@ const breaks = [
 ];
 
 async function seedBreaks() {
+  if (!db) {
+    console.error("❌ Firestore not initialized");
+    process.exit(1);
+  }
+
   console.log("🌱 Seeding Gryphon's upcoming breaks...");
 
   for (const breakData of breaks) {

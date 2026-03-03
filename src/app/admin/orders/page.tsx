@@ -33,6 +33,7 @@ export default function OrdersPage() {
 
   async function loadOrders() {
     try {
+      if (!db) throw new Error("Firestore not initialized");
       const querySnapshot = await getDocs(collection(db, "orders"));
       const loadedOrders = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -54,6 +55,7 @@ export default function OrdersPage() {
     setUpdating(orderId);
     
     try {
+      if (!db) throw new Error("Firestore not initialized");
       const orderRef = doc(db, "orders", orderId);
       
       if (newStatus === "shipped") {
