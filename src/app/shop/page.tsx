@@ -163,10 +163,33 @@ export default function ShopPage() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <p className="text-text-secondary text-lg">No products found</p>
-            <p className="text-text-muted text-sm mt-2">
+            <svg
+              className="w-20 h-20 text-text-muted mx-auto mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <h3 className="text-xl font-bold text-text-primary mb-2">No products found</h3>
+            <p className="text-text-secondary mb-6">
               Try adjusting your filters or search query
             </p>
+            <button
+              onClick={() => {
+                setSportFilter("All");
+                setCategoryFilter("All");
+                setSearchQuery("");
+              }}
+              className="bg-primary text-background px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+            >
+              Clear All Filters
+            </button>
           </div>
         )}
       </div>

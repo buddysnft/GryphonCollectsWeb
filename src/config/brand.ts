@@ -13,6 +13,7 @@ export const brandConfig = {
     instagram: "https://instagram.com/gryphoncollects",
     youtube: "https://youtube.com/@gryphoncollects",
     tiktok: "https://tiktok.com/@gryphoncollects",
+    whatnot: "https://whatnot.com/user/gryphoncollects",
     whatsapp: "#", // Placeholder - will be filled in later
   },
   
@@ -45,5 +46,10 @@ export const brandConfig = {
     users: "users",
     orders: "orders",
     notifications: "notifications",
+  },
+  
+  // Analytics
+  googleAnalytics: {
+    measurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "", // Set in .env
   },
 };
