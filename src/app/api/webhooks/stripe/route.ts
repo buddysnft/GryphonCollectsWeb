@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { adminDb } from "@/lib/firebase-admin";
 import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
@@ -65,15 +64,10 @@ export async function POST(request: NextRequest) {
 
 async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
   try {
-    if (!db) {
-      console.error("Firestore not initialized");
-      return;
-    }
-
     // Parse cart items from metadata
     const cartItems = JSON.parse(session.metadata?.cartItems || "[]");
 
-    // Create order in Firestore
+    // Create order in Firestore using Admin SDK (bypasses security rules)
     const orderData = {
       stripeSessionId: session.id,
       stripePaymentIntentId: session.payment_intent as string,
@@ -82,11 +76,11 @@ async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
       items: cartItems,
       total: session.amount_total! / 100, // Convert from cents to dollars
       status: "confirmed" as const,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    await addDoc(collection(db, "orders"), orderData);
+    await adminDb.collection("orders").add(orderData);
 
     console.log("Order created successfully for session:", session.id);
   } catch (error) {
