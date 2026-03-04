@@ -32,9 +32,8 @@ export interface Break {
   pricePerSpot: number;
   totalSpots: number;
   claimedSpots: number;
-  breakFormat: "Pick Your Team" | "Pick Your Player" | "Random" | "Hit Draft";
-  teams: string[] | null; // For PYT breaks
-  players: string[] | null; // For PYP breaks
+  breakFormat: "Pick Your Team" | "Random Team" | "Random Number" | "Custom";
+  teams: string[] | null; // For team-based breaks
   imageURL: string | null;
   youtubeURL: string | null;
   instagramURL: string | null;

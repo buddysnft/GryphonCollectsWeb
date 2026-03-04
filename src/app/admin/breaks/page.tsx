@@ -78,12 +78,20 @@ export default function AdminBreaksPage() {
     <div className="p-4 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <h1 className="text-3xl md:text-4xl font-bold text-primary">Breaks Management</h1>
-        <Link
-          href="/admin/breaks/templates"
-          className="bg-primary text-background px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition text-center"
-        >
-          Break Templates
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/admin/breaks/new"
+            className="bg-primary text-background px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition text-center"
+          >
+            Create Break
+          </Link>
+          <Link
+            href="/admin/breaks/templates"
+            className="bg-surface border border-primary text-primary px-6 py-3 rounded-lg font-semibold hover:bg-surface-hover transition text-center"
+          >
+            Templates
+          </Link>
+        </div>
       </div>
 
       {/* Filter Tabs */}
