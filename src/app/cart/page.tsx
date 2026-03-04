@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getCart, updateCartItemQuantity, removeFromCart, getCartTotal, clearCart } from "@/lib/cart";
-import { getStripePromise } from "@/lib/stripe";
 import type { CartItem } from "@/lib/types";
 
 export default function CartPage() {
@@ -41,17 +40,17 @@ export default function CartPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Checkout failed");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Checkout failed");
       }
 
-      const { sessionId } = await response.json();
+      const { url } = await response.json();
       
-      // Redirect to Stripe Checkout
-      const stripe = await getStripePromise();
-      const result = await stripe?.redirectToCheckout({ sessionId });
-
-      if (result?.error) {
-        throw new Error(result.error.message);
+      // Redirect directly to Stripe Checkout URL
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error("No checkout URL returned");
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
