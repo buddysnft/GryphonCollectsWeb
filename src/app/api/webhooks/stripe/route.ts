@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { adminDb } from "@/lib/firebase-admin";
+import { getAdminDb } from "@/lib/firebase-admin";
 import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
@@ -87,6 +87,7 @@ async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
         updatedAt: new Date(),
       };
 
+      const adminDb = getAdminDb();
       await adminDb.collection("orders").add(orderData);
 
       // Update break claimed spots
@@ -117,6 +118,7 @@ async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
         updatedAt: new Date(),
       };
 
+      const adminDb = getAdminDb();
       await adminDb.collection("orders").add(orderData);
 
       console.log("Product order created successfully for session:", session.id);

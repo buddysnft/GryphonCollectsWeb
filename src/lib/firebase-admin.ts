@@ -1,19 +1,30 @@
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { initializeApp, getApps, cert, App } from "firebase-admin/app";
+import { getFirestore, Firestore } from "firebase-admin/firestore";
 
-// Initialize Firebase Admin (server-side only)
-let adminApp;
+// Lazy initialization - only init when actually used (runtime, not build time)
+function getAdminApp(): App {
+  if (getApps().length > 0) {
+    return getApps()[0];
+  }
 
-if (getApps().length === 0) {
-  adminApp = initializeApp({
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error("Firebase Admin credentials not configured");
+  }
+
+  return initializeApp({
     credential: cert({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      projectId,
+      clientEmail,
+      privateKey: privateKey.replace(/\\n/g, "\n"),
     }),
   });
-} else {
-  adminApp = getApps()[0];
 }
 
-export const adminDb = getFirestore(adminApp);
+// Export a getter function instead of the instance
+export function getAdminDb(): Firestore {
+  return getFirestore(getAdminApp());
+}
