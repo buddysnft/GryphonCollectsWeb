@@ -4,13 +4,18 @@ import { useEffect, useState } from "react";
 import { getProducts } from "@/lib/firestore";
 import { where, orderBy } from "firebase/firestore";
 import ProductCard from "@/components/ProductCard";
+import Pagination from "@/components/Pagination";
 import { ProductCardSkeleton } from "@/components/LoadingSkeletons";
 import type { Product } from "@/lib/types";
+
+const PRODUCTS_PER_PAGE = 12;
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [paginatedProducts, setPaginatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   
   // Filters
   const [sportFilter, setSportFilter] = useState<string>("All");
@@ -25,6 +30,15 @@ export default function ShopPage() {
   useEffect(() => {
     applyFilters();
   }, [products, sportFilter, categoryFilter, sortBy, searchQuery]);
+
+  useEffect(() => {
+    applyPagination();
+  }, [filteredProducts, currentPage]);
+
+  useEffect(() => {
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+  }, [sportFilter, categoryFilter, searchQuery]);
 
   const loadProducts = async () => {
     try {
@@ -79,6 +93,14 @@ export default function ShopPage() {
 
     setFilteredProducts(filtered);
   };
+
+  const applyPagination = () => {
+    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    const endIndex = startIndex + PRODUCTS_PER_PAGE;
+    setPaginatedProducts(filteredProducts.slice(startIndex, endIndex));
+  };
+
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
 
   // Don't show loading state at top level, show in grid instead
 
@@ -150,17 +172,26 @@ export default function ShopPage() {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {Array.from({ length: 8 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
-        ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+        ) : paginatedProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              {paginatedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
         ) : (
           <div className="text-center py-16">
             <svg
