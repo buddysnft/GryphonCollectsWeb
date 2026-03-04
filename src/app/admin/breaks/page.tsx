@@ -183,9 +183,15 @@ export default function AdminBreaksPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
+                      <Link
+                        href={`/admin/breaks/${breakItem.id}/edit`}
+                        className="text-primary hover:text-primary-light text-sm font-medium"
+                      >
+                        Edit
+                      </Link>
                       <button
                         onClick={() => toggleActive(breakItem.id!, breakItem.isActive)}
-                        className="text-primary hover:text-primary-light text-sm font-medium"
+                        className="text-text-secondary hover:text-text-primary text-sm font-medium"
                       >
                         {breakItem.isActive ? 'Deactivate' : 'Activate'}
                       </button>

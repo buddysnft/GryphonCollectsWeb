@@ -17,8 +17,7 @@ export async function POST(request: NextRequest) {
 
     // Get the site URL for redirects
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-                    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                    "http://localhost:3000";
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
