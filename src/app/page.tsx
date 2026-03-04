@@ -6,6 +6,7 @@ import { getProducts, getBreaks } from "@/lib/firestore";
 import { where, orderBy, limit as limitQuery, Timestamp } from "firebase/firestore";
 import ProductCard from "@/components/ProductCard";
 import BreakCard from "@/components/BreakCard";
+import NewsletterSignup from "@/components/NewsletterSignup";
 import { ProductCardSkeleton, BreakCardSkeleton } from "@/components/LoadingSkeletons";
 import { brandConfig } from "@/config/brand";
 import type { Product, Break } from "@/lib/types";
@@ -138,22 +139,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Social Links CTA */}
+      {/* Newsletter Signup */}
       <section className="py-16 px-4">
+        <div className="max-w-2xl mx-auto">
+          <NewsletterSignup />
+        </div>
+      </section>
+
+      {/* Social Links CTA */}
+      <section className="py-16 px-4 bg-surface">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl font-bold text-text-primary mb-4">
             Follow Us for Live Breaks
           </h2>
           <p className="text-text-secondary mb-6">
-            Stay updated on new drops, live breaks, and exclusive deals
+            Watch live breaks on YouTube, Instagram, and TikTok
           </p>
-          <div className="flex justify-center gap-6">
+          <div className="flex flex-wrap justify-center gap-4">
             {brandConfig.social.instagram && (
               <a
                 href={brandConfig.social.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-surface border border-border px-6 py-3 rounded-lg hover:border-primary transition"
+                className="flex items-center gap-2 bg-background border border-border px-6 py-3 rounded-lg hover:border-primary transition"
+                aria-label="Follow us on Instagram"
               >
                 <span className="text-text-primary">Instagram</span>
               </a>
@@ -163,7 +172,8 @@ export default function Home() {
                 href={brandConfig.social.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-surface border border-border px-6 py-3 rounded-lg hover:border-primary transition"
+                className="flex items-center gap-2 bg-background border border-border px-6 py-3 rounded-lg hover:border-primary transition"
+                aria-label="Follow us on YouTube"
               >
                 <span className="text-text-primary">YouTube</span>
               </a>
@@ -173,7 +183,8 @@ export default function Home() {
                 href={brandConfig.social.tiktok}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-surface border border-border px-6 py-3 rounded-lg hover:border-primary transition"
+                className="flex items-center gap-2 bg-background border border-border px-6 py-3 rounded-lg hover:border-primary transition"
+                aria-label="Follow us on TikTok"
               >
                 <span className="text-text-primary">TikTok</span>
               </a>

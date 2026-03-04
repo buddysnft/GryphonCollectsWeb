@@ -10,11 +10,11 @@ export default function Navbar() {
   const { user, userData, loading } = useAuth();
 
   return (
-    <nav className="bg-surface border-b border-border sticky top-0 z-50">
+    <nav className="bg-surface border-b border-border sticky top-0 z-50" role="navigation" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3" aria-label="Home">
             <div className="text-2xl font-bold text-primary">
               {brandConfig.businessName}
             </div>
@@ -54,13 +54,16 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-text-primary"
+            className="md:hidden text-text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1"
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             <svg
               className="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
+              aria-hidden="true"
             >
               {mobileMenuOpen ? (
                 <path
