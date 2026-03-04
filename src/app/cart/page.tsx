@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getCart, updateCartItemQuantity, removeFromCart, getCartTotal, clearCart } from "@/lib/cart";
+import { getStripePromise } from "@/lib/stripe";
 import type { CartItem } from "@/lib/types";
 
 export default function CartPage() {
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   useEffect(() => {
     loadCart();
@@ -26,6 +28,36 @@ export default function CartPage() {
 
   const handleRemove = (productId: string) => {
     removeFromCart(productId);
+  };
+
+  const handleCheckout = async () => {
+    setCheckingOut(true);
+    try {
+      // Call checkout API to create Stripe session
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartItems: cart }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Checkout failed");
+      }
+
+      const { sessionId } = await response.json();
+      
+      // Redirect to Stripe Checkout
+      const stripe = await getStripePromise();
+      const result = await stripe?.redirectToCheckout({ sessionId });
+
+      if (result?.error) {
+        throw new Error(result.error.message);
+      }
+    } catch (error: any) {
+      console.error("Checkout error:", error);
+      alert("Checkout failed. Please try again.");
+      setCheckingOut(false);
+    }
   };
 
   const total = getCartTotal();
@@ -143,15 +175,19 @@ export default function CartPage() {
           </div>
 
           <button
-            disabled
-            className="w-full bg-surface-hover border border-border text-text-muted py-3 rounded-lg font-semibold cursor-not-allowed mb-2"
+            onClick={handleCheckout}
+            disabled={checkingOut}
+            className="w-full bg-primary text-background py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed mb-2"
           >
-            Checkout Coming Soon
+            {checkingOut ? "Redirecting to checkout..." : "Proceed to Checkout"}
           </button>
           
-          <p className="text-text-muted text-sm text-center">
-            Stripe integration will be added in a future update
-          </p>
+          <div className="flex items-center justify-center gap-2 text-text-muted text-xs">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            <span>Secure checkout powered by Stripe</span>
+          </div>
         </div>
       </div>
     </div>
