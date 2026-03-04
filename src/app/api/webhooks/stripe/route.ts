@@ -64,25 +64,63 @@ export async function POST(request: NextRequest) {
 
 async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
   try {
-    // Parse cart items from metadata
-    const cartItems = JSON.parse(session.metadata?.cartItems || "[]");
+    const orderType = session.metadata?.type || "product";
 
-    // Create order in Firestore using Admin SDK (bypasses security rules)
-    const orderData = {
-      stripeSessionId: session.id,
-      stripePaymentIntentId: session.payment_intent as string,
-      customerEmail: session.customer_details?.email || null,
-      customerName: session.customer_details?.name || null,
-      items: cartItems,
-      total: session.amount_total! / 100, // Convert from cents to dollars
-      status: "confirmed" as const,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    if (orderType === "break") {
+      // Handle break spot purchase
+      const breakId = session.metadata?.breakId;
+      const spots = JSON.parse(session.metadata?.spots || "[]");
+      const pricePerSpot = parseFloat(session.metadata?.pricePerSpot || "0");
 
-    await adminDb.collection("orders").add(orderData);
+      const orderData = {
+        type: "break",
+        breakId,
+        spots,
+        pricePerSpot,
+        stripeSessionId: session.id,
+        stripePaymentIntentId: session.payment_intent as string,
+        customerEmail: session.customer_details?.email || null,
+        customerName: session.customer_details?.name || null,
+        total: session.amount_total! / 100,
+        status: "confirmed" as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    console.log("Order created successfully for session:", session.id);
+      await adminDb.collection("orders").add(orderData);
+
+      // Update break claimed spots
+      const breakRef = adminDb.collection("breaks").doc(breakId!);
+      const breakDoc = await breakRef.get();
+      if (breakDoc.exists) {
+        const currentClaimed = breakDoc.data()?.claimedSpots || 0;
+        await breakRef.update({
+          claimedSpots: currentClaimed + spots.length,
+        });
+      }
+
+      console.log("Break order created successfully for session:", session.id);
+    } else {
+      // Handle product purchase
+      const cartItems = JSON.parse(session.metadata?.cartItems || "[]");
+
+      const orderData = {
+        type: "product",
+        stripeSessionId: session.id,
+        stripePaymentIntentId: session.payment_intent as string,
+        customerEmail: session.customer_details?.email || null,
+        customerName: session.customer_details?.name || null,
+        items: cartItems,
+        total: session.amount_total! / 100,
+        status: "confirmed" as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await adminDb.collection("orders").add(orderData);
+
+      console.log("Product order created successfully for session:", session.id);
+    }
   } catch (error) {
     console.error("Error creating order:", error);
     throw error;
