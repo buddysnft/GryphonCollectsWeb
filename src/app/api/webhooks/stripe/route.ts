@@ -63,14 +63,25 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
+  console.log("=== WEBHOOK HANDLER STARTED ===");
+  console.log("Session ID:", session.id);
+  console.log("Metadata:", JSON.stringify(session.metadata));
+  
   try {
     const orderType = session.metadata?.type || "product";
+    console.log("Order type detected:", orderType);
+
+    console.log("Attempting to get Admin DB...");
+    const adminDb = getAdminDb();
+    console.log("Admin DB obtained successfully");
 
     if (orderType === "break") {
       // Handle break spot purchase
       const breakId = session.metadata?.breakId;
       const spots = JSON.parse(session.metadata?.spots || "[]");
       const pricePerSpot = parseFloat(session.metadata?.pricePerSpot || "0");
+
+      console.log("Break order data:", { breakId, spots, pricePerSpot });
 
       const orderData = {
         type: "break",
@@ -87,23 +98,33 @@ async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
         updatedAt: new Date(),
       };
 
-      const adminDb = getAdminDb();
+      console.log("Creating order in Firestore...");
       await adminDb.collection("orders").add(orderData);
+      console.log("Order created successfully");
 
       // Update break claimed spots
+      console.log("Updating break spots for:", breakId);
       const breakRef = adminDb.collection("breaks").doc(breakId!);
       const breakDoc = await breakRef.get();
+      
       if (breakDoc.exists) {
         const currentClaimed = breakDoc.data()?.claimedSpots || 0;
+        const newClaimed = currentClaimed + spots.length;
+        console.log(`Updating claimed spots: ${currentClaimed} -> ${newClaimed}`);
+        
         await breakRef.update({
-          claimedSpots: currentClaimed + spots.length,
+          claimedSpots: newClaimed,
         });
+        console.log("Break spots updated successfully");
+      } else {
+        console.error("Break document not found:", breakId);
       }
 
-      console.log("Break order created successfully for session:", session.id);
+      console.log("✅ Break order completed for session:", session.id);
     } else {
       // Handle product purchase
       const cartItems = JSON.parse(session.metadata?.cartItems || "[]");
+      console.log("Product order - cart items:", cartItems.length);
 
       const orderData = {
         type: "product",
@@ -118,13 +139,15 @@ async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
         updatedAt: new Date(),
       };
 
-      const adminDb = getAdminDb();
+      console.log("Creating product order in Firestore...");
       await adminDb.collection("orders").add(orderData);
-
-      console.log("Product order created successfully for session:", session.id);
+      console.log("✅ Product order completed for session:", session.id);
     }
-  } catch (error) {
-    console.error("Error creating order:", error);
+  } catch (error: any) {
+    console.error("❌ ERROR in handleSuccessfulCheckout:");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Full error:", JSON.stringify(error, null, 2));
     throw error;
   }
 }
