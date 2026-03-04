@@ -1,6 +1,18 @@
 # Gryphon Collects Web
 
-E-commerce platform for soccer card breaking built with Next.js 14, TypeScript, Tailwind CSS, and Firebase.
+Premium soccer card breaking platform for [@gryphoncollects](https://instagram.com/gryphoncollects). Built with Next.js 14, TypeScript, Tailwind CSS, Firebase, and Stripe.
+
+**Live Site:** https://gryphon-collects-web-jswr.vercel.app
+
+## 🎯 Key Features
+
+- **Break Management:** Create and manage breaks with multiple allocation types (Pick Your Team, Random Team, Random Number, Custom)
+- **Spot Selection:** Interactive grid for customers to select and purchase spots
+- **Real-time Countdown:** Live countdown timer to next break on homepage
+- **Stripe Checkout:** Secure payment processing for breaks and products
+- **Customer Accounts:** Order history and profile management
+- **Admin Dashboard:** Complete CRUD for breaks, products, orders, and checklists
+- **Responsive Design:** Mobile-first with dark theme (#0a0a14 background, #d4a843 gold accents)
 
 ## 🚀 Quick Start
 
