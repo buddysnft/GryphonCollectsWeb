@@ -6,6 +6,7 @@ import { getProducts, getBreaks } from "@/lib/firestore";
 import { where, orderBy, limit as limitQuery, Timestamp } from "firebase/firestore";
 import ProductCard from "@/components/ProductCard";
 import BreakCard from "@/components/BreakCard";
+import { ProductCardSkeleton, BreakCardSkeleton } from "@/components/LoadingSkeletons";
 import { brandConfig } from "@/config/brand";
 import type { Product, Break } from "@/lib/types";
 
@@ -42,14 +43,6 @@ export default function Home() {
     loadData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-text-secondary">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -79,50 +72,71 @@ export default function Home() {
       </section>
 
       {/* Featured Products */}
-      {featuredProducts.length > 0 && (
-        <section className="py-16 px-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-primary">Available Now</h2>
-              <Link
-                href="/shop"
-                className="text-text-secondary hover:text-primary transition"
-              >
-                View All →
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+      <section className="py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-primary">Available Now</h2>
+            <Link
+              href="/shop"
+              className="text-text-secondary hover:text-primary transition"
+            >
+              View All →
+            </Link>
           </div>
-        </section>
-      )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {loading ? (
+              <>
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+              </>
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-text-secondary">
+                No featured products yet
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* Upcoming Breaks */}
-      {upcomingBreaks.length > 0 && (
-        <section className="py-16 px-4 bg-surface">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-primary">Upcoming Breaks</h2>
-              <Link
-                href="/breaks"
-                className="text-text-secondary hover:text-primary transition"
-              >
-                View All →
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {upcomingBreaks.map((breakData) => (
-                <BreakCard key={breakData.id} breakData={breakData} />
-              ))}
-            </div>
+      <section className="py-16 px-4 bg-surface">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-primary">Upcoming Breaks</h2>
+            <Link
+              href="/breaks"
+              className="text-text-secondary hover:text-primary transition"
+            >
+              View All →
+            </Link>
           </div>
-        </section>
-      )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loading ? (
+              <>
+                <BreakCardSkeleton />
+                <BreakCardSkeleton />
+                <BreakCardSkeleton />
+              </>
+            ) : upcomingBreaks.length > 0 ? (
+              upcomingBreaks.map((breakData) => (
+                <BreakCard key={breakData.id} breakData={breakData} />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-text-secondary">
+                No upcoming breaks scheduled
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* Social Links CTA */}
       <section className="py-16 px-4">

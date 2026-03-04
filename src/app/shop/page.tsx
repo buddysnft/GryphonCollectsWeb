@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getProducts } from "@/lib/firestore";
 import { where, orderBy } from "firebase/firestore";
 import ProductCard from "@/components/ProductCard";
+import { ProductCardSkeleton } from "@/components/LoadingSkeletons";
 import type { Product } from "@/lib/types";
 
 export default function ShopPage() {
@@ -79,13 +80,7 @@ export default function ShopPage() {
     setFilteredProducts(filtered);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-text-secondary">Loading products...</div>
-      </div>
-    );
-  }
+  // Don't show loading state at top level, show in grid instead
 
   return (
     <div className="min-h-screen py-8 px-4">
@@ -154,7 +149,13 @@ export default function ShopPage() {
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />

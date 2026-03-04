@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getBreaks } from "@/lib/firestore";
 import { where, orderBy, Timestamp } from "firebase/firestore";
 import BreakCard from "@/components/BreakCard";
+import { BreakCardSkeleton } from "@/components/LoadingSkeletons";
 import type { Break } from "@/lib/types";
 
 export default function BreaksPage() {
@@ -29,13 +30,7 @@ export default function BreaksPage() {
     loadBreaks();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-text-secondary">Loading...</div>
-      </div>
-    );
-  }
+  // Don't show loading state at top level, show in grid instead
 
   return (
     <div className="min-h-screen py-8 px-4">
@@ -88,7 +83,13 @@ export default function BreaksPage() {
         </div>
 
         {/* Breaks Grid */}
-        {breaks.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <BreakCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : breaks.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {breaks.map((breakData) => (
               <BreakCard key={breakData.id} breakData={breakData} />

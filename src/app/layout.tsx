@@ -3,12 +3,10 @@ import { AuthProvider } from "@/lib/auth-context";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { brandConfig } from "@/config/brand";
+import { generateMetadata } from "@/lib/metadata";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: brandConfig.businessName,
-  description: brandConfig.tagline,
-};
+export const metadata: Metadata = generateMetadata({});
 
 export default function RootLayout({
   children,
