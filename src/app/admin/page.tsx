@@ -138,9 +138,10 @@ export default function AdminDashboard() {
           </Link>
           <Link
             href="/admin/fix-data"
-            className="bg-warning text-background px-3 md:px-4 py-2 md:py-3 rounded-lg font-semibold text-center hover:opacity-90 transition text-sm md:text-base"
+            className="bg-surface-hover border border-border text-text-secondary px-3 md:px-4 py-2 md:py-3 rounded-lg font-semibold text-center hover:border-primary transition text-sm md:text-base col-span-2 lg:col-span-1"
+            title="Fix data activation issues (for troubleshooting)"
           >
-            Fix Data
+            🔧 Fix Data
           </Link>
           <Link
             href="/"
