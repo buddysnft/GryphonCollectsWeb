@@ -9,12 +9,18 @@ function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [loading, setLoading] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
+    // Update page title
+    document.title = "Order Confirmed! - Gryphon Collects";
+    
     if (sessionId) {
       // Clear the cart after successful checkout
       clearCart();
       setLoading(false);
+      // Show confetti after a brief delay
+      setTimeout(() => setShowConfetti(true), 100);
     } else {
       // If no session ID, redirect to shop after 3 seconds
       setTimeout(() => {
@@ -45,11 +51,29 @@ function CheckoutSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Animated Background Pattern */}
+      {showConfetti && (
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-primary rounded-full animate-bounce opacity-70"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `-20px`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="max-w-md w-full text-center relative z-10">
         <div className="mb-8">
           {/* Success Icon */}
-          <div className="w-24 h-24 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-24 h-24 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-scale-in">
             <svg 
               className="w-12 h-12 text-success" 
               fill="none" 
@@ -66,8 +90,8 @@ function CheckoutSuccessContent() {
             </svg>
           </div>
 
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            Order Confirmed!
+          <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
+            Order Confirmed! 🎉
           </h1>
           <p className="text-text-secondary mb-4">
             Thank you for your purchase. You'll receive a confirmation email shortly.
