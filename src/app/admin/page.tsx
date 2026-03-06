@@ -117,7 +117,7 @@ export default function AdminDashboard() {
       {/* Quick Actions */}
       <div className="bg-surface border border-border rounded-lg p-4 md:p-6">
         <h2 className="text-lg md:text-xl font-bold text-text-primary mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
           <Link
             href="/admin/products/new"
             className="bg-primary text-background px-3 md:px-4 py-2 md:py-3 rounded-lg font-semibold text-center hover:opacity-90 transition text-sm md:text-base"
@@ -135,6 +135,12 @@ export default function AdminDashboard() {
             className="bg-primary text-background px-3 md:px-4 py-2 md:py-3 rounded-lg font-semibold text-center hover:opacity-90 transition text-sm md:text-base"
           >
             Notify
+          </Link>
+          <Link
+            href="/admin/fix-data"
+            className="bg-warning text-background px-3 md:px-4 py-2 md:py-3 rounded-lg font-semibold text-center hover:opacity-90 transition text-sm md:text-base"
+          >
+            Fix Data
           </Link>
           <Link
             href="/"
