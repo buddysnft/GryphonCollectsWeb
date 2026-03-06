@@ -6,6 +6,7 @@ import { where, orderBy } from "firebase/firestore";
 import ProductCard from "@/components/ProductCard";
 import Pagination from "@/components/Pagination";
 import { ProductCardSkeleton } from "@/components/LoadingSkeletons";
+import ErrorState from "@/components/ErrorState";
 import type { Product } from "@/lib/types";
 
 const PRODUCTS_PER_PAGE = 12;
@@ -15,6 +16,7 @@ export default function ShopPage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [paginatedProducts, setPaginatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   
   // Filters
@@ -42,11 +44,13 @@ export default function ShopPage() {
 
   const loadProducts = async () => {
     try {
+      setError(null);
       const constraints = [where("isActive", "==", true)];
       const fetchedProducts = await getProducts(constraints);
       setProducts(fetchedProducts);
-    } catch (error) {
-      console.error("Error loading products:", error);
+    } catch (err: any) {
+      console.error("Error loading products:", err);
+      setError(err.message || "Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -171,7 +175,13 @@ export default function ShopPage() {
         </div>
 
         {/* Products Grid */}
-        {loading ? (
+        {error ? (
+          <ErrorState
+            title="Couldn't load products"
+            message={error}
+            onRetry={loadProducts}
+          />
+        ) : loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {Array.from({ length: 8 }).map((_, i) => (
               <ProductCardSkeleton key={i} />

@@ -5,29 +5,33 @@ import { getBreaks } from "@/lib/firestore";
 import { where, orderBy, Timestamp } from "firebase/firestore";
 import BreakCard from "@/components/BreakCard";
 import { BreakCardSkeleton } from "@/components/LoadingSkeletons";
+import ErrorState from "@/components/ErrorState";
 import { brandConfig } from "@/config/brand";
 import type { Break } from "@/lib/types";
 
 export default function BreaksPage() {
   const [breaks, setBreaks] = useState<Break[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadBreaks = async () => {
+    try {
+      setError(null);
+      // Fetch all breaks, filter on client side
+      const allBreaks = await getBreaks([]);
+      const upcoming = allBreaks
+        .filter(b => b.isActive && b.date.seconds * 1000 > Date.now())
+        .sort((a, b) => a.date.seconds - b.date.seconds);
+      setBreaks(upcoming);
+    } catch (err: any) {
+      console.error("Error loading breaks:", err);
+      setError(err.message || "Failed to load breaks");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadBreaks() {
-      try {
-        // Fetch all breaks, filter on client side
-        const allBreaks = await getBreaks([]);
-        const upcoming = allBreaks
-          .filter(b => b.isActive && b.date.seconds * 1000 > Date.now())
-          .sort((a, b) => a.date.seconds - b.date.seconds);
-        setBreaks(upcoming);
-      } catch (error) {
-        console.error("Error loading breaks:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadBreaks();
   }, []);
 
@@ -90,7 +94,13 @@ export default function BreaksPage() {
         </div>
 
         {/* Breaks Grid */}
-        {loading ? (
+        {error ? (
+          <ErrorState
+            title="Couldn't load breaks"
+            message={error}
+            onRetry={loadBreaks}
+          />
+        ) : loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <BreakCardSkeleton key={i} />
