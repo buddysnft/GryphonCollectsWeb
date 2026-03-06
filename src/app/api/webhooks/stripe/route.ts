@@ -7,10 +7,24 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
+  console.log("=== WEBHOOK RECEIVED ===");
+  console.log("Timestamp:", new Date().toISOString());
+  console.log("Has signature:", !!signature);
+  console.log("Has webhook secret:", !!process.env.STRIPE_WEBHOOK_SECRET);
+
   if (!signature) {
+    console.error("No signature in request");
     return NextResponse.json(
       { error: "No signature provided" },
       { status: 400 }
+    );
+  }
+
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("STRIPE_WEBHOOK_SECRET not configured");
+    return NextResponse.json(
+      { error: "Webhook secret not configured" },
+      { status: 500 }
     );
   }
 
@@ -20,12 +34,14 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET
     );
+    console.log("Webhook signature verified successfully");
+    console.log("Event type:", event.type);
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
     return NextResponse.json(
-      { error: "Webhook signature verification failed" },
+      { error: "Webhook signature verification failed", details: err.message },
       { status: 400 }
     );
   }

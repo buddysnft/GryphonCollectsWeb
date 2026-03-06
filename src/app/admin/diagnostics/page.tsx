@@ -15,13 +15,38 @@ export default function DiagnosticsPage() {
       const checkoutResponse = await fetch("/api/debug/test-checkout");
       const checkoutData = await checkoutResponse.json();
 
+      // Check webhook logs and orders
+      const webhookResponse = await fetch("/api/debug/webhook-logs");
+      const webhookData = await webhookResponse.json();
+
       setResults({
         checkout: checkoutData,
+        webhooks: webhookData,
       });
     } catch (error: any) {
       setResults({
         error: error.message,
       });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createTestOrder = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/debug/create-test-order", { method: "POST" });
+      const data = await response.json();
+      
+      if (data.success) {
+        alert("✅ Test order created! Check /admin/orders");
+        // Refresh diagnostics
+        runDiagnostics();
+      } else {
+        alert("❌ Failed: " + data.error);
+      }
+    } catch (error: any) {
+      alert("❌ Error: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -34,13 +59,22 @@ export default function DiagnosticsPage() {
         Test checkout configuration and troubleshoot issues.
       </p>
 
-      <button
-        onClick={runDiagnostics}
-        disabled={loading}
-        className="bg-primary text-background px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 mb-8"
-      >
-        {loading ? "Running Tests..." : "Run Diagnostics"}
-      </button>
+      <div className="flex gap-4 mb-8">
+        <button
+          onClick={runDiagnostics}
+          disabled={loading}
+          className="bg-primary text-background px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+        >
+          {loading ? "Running Tests..." : "Run Diagnostics"}
+        </button>
+        <button
+          onClick={createTestOrder}
+          disabled={loading}
+          className="bg-surface border-2 border-primary text-primary px-6 py-3 rounded-lg font-semibold hover:bg-surface-hover transition disabled:opacity-50"
+        >
+          Create Test Order
+        </button>
+      </div>
 
       {results && (
         <div className="space-y-6">
@@ -136,6 +170,63 @@ export default function DiagnosticsPage() {
                   <div className="text-sm">
                     Test session created: <code>{results.checkout.results.stripe.testSessionId}</code>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Webhook Status */}
+          {results.webhooks && (
+            <div className="bg-surface border border-border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-text-primary">Webhook & Orders</h2>
+                {results.webhooks.success ? (
+                  <span className="text-success text-2xl">✅</span>
+                ) : (
+                  <span className="text-danger text-2xl">❌</span>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-text-secondary mb-2">Orders in Database</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className={results.webhooks.ordersCount > 0 ? "text-success" : "text-warning"}>
+                      {results.webhooks.ordersCount > 0 ? "✓" : "⚠️"}
+                    </span>
+                    <span>{results.webhooks.ordersCount} order(s) found</span>
+                  </div>
+                  {results.webhooks.ordersCount === 0 && (
+                    <p className="text-text-muted text-xs mt-2">
+                      No orders yet. Either no purchases have been made, or the webhook isn't creating orders.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {results.webhooks.orders && results.webhooks.orders.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-text-secondary mb-2">Recent Orders</h3>
+                  <div className="space-y-2">
+                    {results.webhooks.orders.slice(0, 3).map((order: any) => (
+                      <div key={order.id} className="bg-background border border-border rounded p-2 text-xs">
+                        <div className="font-semibold text-primary">{order.id}</div>
+                        <div className="text-text-secondary">
+                          {order.customerEmail || "No email"} • ${order.amount || "0.00"}
+                        </div>
+                        <div className="text-text-muted">
+                          {order.createdAt || "No timestamp"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {results.webhooks.error && (
+                <div className="bg-danger/20 border border-danger text-danger px-4 py-3 rounded-lg">
+                  <strong className="block mb-1">Error checking webhooks:</strong>
+                  <code className="text-sm">{results.webhooks.error}</code>
                 </div>
               )}
             </div>
