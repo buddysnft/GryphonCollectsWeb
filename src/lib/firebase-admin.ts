@@ -19,7 +19,8 @@ function getAdminApp(): App {
     credential: cert({
       projectId,
       clientEmail,
-      privateKey: privateKey.replace(/\\n/g, "\n"),
+      // Handle both single and double-escaped newlines
+      privateKey: privateKey.replace(/\\\\n/g, "\n").replace(/\\n/g, "\n"),
     }),
   });
 }
