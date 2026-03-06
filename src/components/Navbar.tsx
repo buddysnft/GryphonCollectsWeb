@@ -15,9 +15,11 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3" aria-label="Home">
-            <div className="text-2xl font-bold text-primary">
-              {brandConfig.businessName}
-            </div>
+            <img 
+              src="/logo.jpg" 
+              alt="Gryphon Collects" 
+              className="h-12 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
