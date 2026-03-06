@@ -137,8 +137,15 @@ export default function AdminDashboard() {
             Notify
           </Link>
           <Link
+            href="/admin/diagnostics"
+            className="bg-surface-hover border border-border text-text-secondary px-3 md:px-4 py-2 md:py-3 rounded-lg font-semibold text-center hover:border-primary transition text-sm md:text-base"
+            title="Test checkout and system configuration"
+          >
+            🔬 Diagnostics
+          </Link>
+          <Link
             href="/admin/fix-data"
-            className="bg-surface-hover border border-border text-text-secondary px-3 md:px-4 py-2 md:py-3 rounded-lg font-semibold text-center hover:border-primary transition text-sm md:text-base col-span-2 lg:col-span-1"
+            className="bg-surface-hover border border-border text-text-muted px-3 md:px-4 py-2 md:py-3 rounded-lg font-semibold text-center hover:border-primary transition text-sm md:text-base"
             title="Fix data activation issues (for troubleshooting)"
           >
             🔧 Fix Data
