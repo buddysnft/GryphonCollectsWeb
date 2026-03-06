@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { getSiteUrl } from "@/lib/get-site-url";
 
 /**
  * Test Stripe checkout configuration
@@ -17,7 +18,9 @@ export async function GET() {
       hasPublicKey: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
       hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
       hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-      siteUrl: process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL,
+      siteUrl: getSiteUrl(),
+      rawSiteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+      rawVercelUrl: process.env.VERCEL_URL,
     },
   };
 
@@ -31,6 +34,7 @@ export async function GET() {
 
     // Test if we can create a checkout session
     try {
+      const siteUrl = getSiteUrl();
       const testSession = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -46,8 +50,8 @@ export async function GET() {
           },
         ],
         mode: "payment",
-        success_url: `${results.environment.siteUrl || "https://example.com"}/test`,
-        cancel_url: `${results.environment.siteUrl || "https://example.com"}/test`,
+        success_url: `${siteUrl}/test`,
+        cancel_url: `${siteUrl}/test`,
       });
 
       results.stripe.canCreateSession = true;

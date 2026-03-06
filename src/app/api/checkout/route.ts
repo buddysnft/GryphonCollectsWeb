@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { getSiteUrl } from "@/lib/get-site-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,8 +27,7 @@ export async function POST(request: NextRequest) {
     }));
 
     // Get the site URL for redirects
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const siteUrl = getSiteUrl();
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
