@@ -45,6 +45,13 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/logo.jpg" 
+              alt="Gryphon Collects" 
+              className="h-24 w-auto"
+            />
+          </div>
           <h1 className="text-3xl font-bold text-primary mb-2">Create Account</h1>
           <p className="text-text-secondary">Join us today</p>
         </div>
