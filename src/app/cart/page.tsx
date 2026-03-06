@@ -10,6 +10,7 @@ export default function CartPage() {
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     loadCart();
@@ -31,6 +32,7 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     setCheckingOut(true);
+    setCheckoutError(null);
     try {
       // Call checkout API to create Stripe session
       const response = await fetch("/api/checkout", {
@@ -54,7 +56,7 @@ export default function CartPage() {
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
-      alert("Checkout failed. Please try again.");
+      setCheckoutError(error.message || "Checkout failed. Please try again.");
       setCheckingOut(false);
     }
   };
@@ -173,10 +175,24 @@ export default function CartPage() {
             <span className="text-3xl font-bold text-primary">${total.toFixed(2)}</span>
           </div>
 
+          {checkoutError && (
+            <div className="bg-danger/20 border border-danger text-danger px-4 py-3 rounded-lg mb-4">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <strong className="block text-sm font-semibold mb-1">Checkout Failed</strong>
+                  <p className="text-sm">{checkoutError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <button
             onClick={handleCheckout}
             disabled={checkingOut}
-            className="w-full bg-primary text-background py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed mb-2"
+            className="w-full bg-primary text-background py-3 px-6 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed mb-2 min-h-[44px]"
           >
             {checkingOut ? "Redirecting to checkout..." : "Proceed to Checkout"}
           </button>
