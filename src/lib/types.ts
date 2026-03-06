@@ -34,6 +34,7 @@ export interface Break {
   claimedSpots: number;
   breakFormat: "Pick Your Team" | "Random Team" | "Random Number" | "Custom";
   teams: string[] | null; // For team-based breaks
+  spotLabels?: { [spotNumber: number]: string }; // Optional custom labels (team names, player names, etc.)
   imageURL: string | null;
   youtubeURL: string | null;
   instagramURL: string | null;

@@ -193,10 +193,13 @@ export default function BreakDetailPage() {
               <h2 className="text-xl font-bold text-text-primary mb-4">Select Your Spots</h2>
 
               {/* Spot Grid */}
-              <div className="grid grid-cols-5 gap-2 mb-6 max-h-96 overflow-y-auto">
+              {/* Dynamic grid: more columns for numbers-only, fewer for team/player names */}
+              <div className={`grid ${breakData.spotLabels ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-6 sm:grid-cols-8'} gap-2 mb-6 max-h-96 overflow-y-auto`}>
                 {Array.from({ length: breakData.totalSpots }, (_, i) => i + 1).map((spotNumber) => {
                   const isClaimed = breakData.claimedSpots >= spotNumber;
                   const isSelected = selectedSpots.includes(spotNumber);
+                  const spotLabel = breakData.spotLabels?.[spotNumber] || spotNumber.toString();
+                  const hasCustomLabel = breakData.spotLabels?.[spotNumber];
 
                   return (
                     <button
@@ -204,13 +207,23 @@ export default function BreakDetailPage() {
                       onClick={() => !isClaimed && toggleSpot(spotNumber)}
                       disabled={isClaimed}
                       className={`
-                        aspect-square rounded-lg font-semibold text-sm transition
+                        ${hasCustomLabel ? 'aspect-[3/2] py-3 px-2' : 'aspect-square'} 
+                        rounded-lg font-semibold transition
+                        ${hasCustomLabel ? 'text-xs' : 'text-sm'}
                         ${isClaimed ? 'bg-background text-text-muted cursor-not-allowed' : ''}
                         ${!isClaimed && !isSelected ? 'bg-background text-text-primary hover:bg-primary hover:text-white' : ''}
                         ${isSelected ? 'bg-primary text-white ring-2 ring-primary ring-offset-2 ring-offset-surface' : ''}
+                        ${hasCustomLabel ? 'flex flex-col items-center justify-center gap-0.5' : ''}
                       `}
                     >
-                      {spotNumber}
+                      {hasCustomLabel ? (
+                        <>
+                          <span className="text-[10px] text-text-muted opacity-70">#{spotNumber}</span>
+                          <span className="font-bold leading-tight text-center break-words">{spotLabel}</span>
+                        </>
+                      ) : (
+                        spotNumber
+                      )}
                     </button>
                   );
                 })}
