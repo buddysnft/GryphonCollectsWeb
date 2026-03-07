@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<string | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -38,6 +40,47 @@ export default function OrdersPage() {
       console.error("Error loading orders:", error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function updateTeamAssignment(orderId: string, team: string) {
+    setUpdating(orderId);
+    try {
+      if (!db) throw new Error("Firestore not initialized");
+      await updateDoc(doc(db, "orders", orderId), {
+        teamAssignment: team,
+        updatedAt: Timestamp.now(),
+      });
+      await loadOrders();
+      alert(`✅ Team "${team}" assigned successfully!`);
+    } catch (error: any) {
+      console.error("Error updating team:", error);
+      alert(`❌ Failed to assign team: ${error.message}`);
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  async function markAsShipped(orderId: string) {
+    const tracking = prompt("Enter tracking number:");
+    if (!tracking) return;
+
+    setUpdating(orderId);
+    try {
+      if (!db) throw new Error("Firestore not initialized");
+      await updateDoc(doc(db, "orders", orderId), {
+        status: "shipped",
+        trackingNumber: tracking,
+        shippedAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+      await loadOrders();
+      alert(`✅ Order marked as shipped! Tracking: ${tracking}`);
+    } catch (error: any) {
+      console.error("Error marking shipped:", error);
+      alert(`❌ Failed to mark as shipped: ${error.message}`);
+    } finally {
+      setUpdating(null);
     }
   }
 
@@ -79,6 +122,7 @@ export default function OrdersPage() {
           <div className="space-y-4">
             {orders.map((order) => (
               <div key={order.id} className="bg-surface border border-border rounded-lg p-6">
+                {/* Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <div className="text-sm font-mono text-text-muted">Order #{order.id.slice(0, 8)}</div>
@@ -88,7 +132,8 @@ export default function OrdersPage() {
                   </div>
                   <div className="text-right">
                     <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                      order.status === 'confirmed' ? 'bg-success/20 text-success' :
+                      order.status === 'shipped' ? 'bg-success/20 text-success' :
+                      order.status === 'confirmed' ? 'bg-primary/20 text-primary' :
                       order.status === 'test' ? 'bg-warning/20 text-warning' :
                       'bg-surface-hover text-text-secondary'
                     }`}>
@@ -98,7 +143,8 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                {/* Details */}
+                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                   <div>
                     <div className="text-text-muted mb-1">Customer</div>
                     <div className="text-text-primary">{order.customerName || 'Unknown'}</div>
@@ -129,6 +175,88 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
+                {/* Break Order: Team Assignment */}
+                {order.type === 'break' && (
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-text-primary mb-1">
+                          Team Assignment
+                        </div>
+                        {order.teamAssignment ? (
+                          <div className="text-primary font-bold">⚽ {order.teamAssignment}</div>
+                        ) : (
+                          <div className="text-text-muted text-sm">Not assigned yet</div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+                        className="text-primary text-sm font-semibold hover:underline"
+                      >
+                        {order.teamAssignment ? 'Change Team' : 'Assign Team'}
+                      </button>
+                    </div>
+
+                    {/* Team Selection Dropdown */}
+                    {expandedOrder === order.id && (
+                      <div className="mt-3">
+                        <input
+                          type="text"
+                          placeholder="Enter team name (e.g., Liverpool, Arsenal)"
+                          className="w-full bg-background border border-border rounded px-3 py-2 text-text-primary"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const value = e.currentTarget.value.trim();
+                              if (value) {
+                                updateTeamAssignment(order.id, value);
+                                setExpandedOrder(null);
+                                e.currentTarget.value = '';
+                              }
+                            }
+                          }}
+                          disabled={updating === order.id}
+                        />
+                        <div className="text-xs text-text-muted mt-1">
+                          Press Enter to save
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Shipping Section */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-text-primary mb-1">
+                        Shipping
+                      </div>
+                      {order.trackingNumber ? (
+                        <div className="text-sm">
+                          <div className="text-text-secondary">Tracking: <span className="font-mono text-primary">{order.trackingNumber}</span></div>
+                          {order.shippedAt && (
+                            <div className="text-xs text-text-muted mt-1">
+                              Shipped: {formatDate(order.shippedAt)}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-text-muted text-sm">Not shipped yet</div>
+                      )}
+                    </div>
+                    {order.status !== 'shipped' && order.status !== 'test' && (
+                      <button
+                        onClick={() => markAsShipped(order.id)}
+                        disabled={updating === order.id}
+                        className="bg-primary text-background px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
+                      >
+                        {updating === order.id ? 'Updating...' : 'Mark as Shipped'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stripe Session ID */}
                 {order.stripeSessionId && (
                   <div className="mt-4 pt-4 border-t border-border">
                     <div className="text-xs text-text-muted">

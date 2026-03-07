@@ -64,18 +64,16 @@ export interface User {
 
 export interface Order {
   id: string;
-  userId: string;
-  items: {
+  // Old format fields (product orders)
+  userId?: string;
+  items?: {
     productId: string;
     productName: string;
     price: number;
     quantity: number;
   }[];
-  total: number;
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "held";
-  trackingNumber: string | null;
-  holdForPickup: boolean;
-  shippingAddress: {
+  total?: number;
+  shippingAddress?: {
     street: string;
     apt: string;
     city: string;
@@ -83,7 +81,28 @@ export interface Order {
     zip: string;
     country: string;
   };
-  createdAt: Timestamp;
+  holdForPickup?: boolean;
+  
+  // New format fields (webhook orders)
+  type?: "product" | "break";
+  customerEmail?: string;
+  customerName?: string;
+  stripeSessionId?: string;
+  stripePaymentIntentId?: string;
+  amount?: number;
+  
+  // Break-specific fields
+  breakId?: string;
+  spots?: number[];
+  pricePerSpot?: number;
+  teamAssignment?: string; // NEW: Team assigned after break (e.g., "Liverpool")
+  
+  // Common fields
+  status: "pending" | "confirmed" | "shipped" | "delivered" | "held" | "test";
+  trackingNumber?: string | null; // Updated for new orders
+  shippedAt?: Timestamp; // NEW: When marked as shipped
+  createdAt: Timestamp | any; // Flexible for multiple formats
+  updatedAt?: Timestamp | any;
 }
 
 export interface Notification {
