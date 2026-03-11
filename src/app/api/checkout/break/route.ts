@@ -4,7 +4,7 @@ import { getSiteUrl } from "@/lib/get-site-url";
 
 export async function POST(request: NextRequest) {
   try {
-    const { breakId, spots, pricePerSpot, breakTitle } = await request.json();
+    const { breakId, spots, pricePerSpot, spotPrices, breakTitle } = await request.json();
 
     if (!breakId || !spots || spots.length === 0 || !pricePerSpot) {
       return NextResponse.json(
@@ -13,8 +13,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate total
-    const total = spots.length * pricePerSpot;
+    // Calculate total using individual spot prices if provided, otherwise use default
+    let total = 0;
+    if (spotPrices) {
+      total = spots.reduce((sum: number, spotNum: number) => {
+        return sum + (spotPrices[spotNum] || pricePerSpot);
+      }, 0);
+    } else {
+      total = spots.length * pricePerSpot;
+    }
 
     // Get the site URL for redirects
     const siteUrl = getSiteUrl();
@@ -43,6 +50,7 @@ export async function POST(request: NextRequest) {
         breakId,
         spots: JSON.stringify(spots),
         pricePerSpot: pricePerSpot.toString(),
+        ...(spotPrices && { spotPrices: JSON.stringify(spotPrices) }),
       },
     });
 

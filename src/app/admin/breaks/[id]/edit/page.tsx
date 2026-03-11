@@ -29,6 +29,8 @@ export default function EditBreakPage() {
     instagramURL: "",
     isActive: true,
   });
+  
+  const [spotPrices, setSpotPrices] = useState<{ [spotNumber: number]: number }>({});
 
   useEffect(() => {
     loadBreak();
@@ -69,6 +71,11 @@ export default function EditBreakPage() {
         instagramURL: data.instagramURL || "",
         isActive: data.isActive,
       });
+      
+      // Load custom spot prices if they exist
+      if (data.spotPrices) {
+        setSpotPrices(data.spotPrices);
+      }
     } catch (error) {
       console.error("Error loading break:", error);
       alert("Failed to load break");
@@ -86,7 +93,7 @@ export default function EditBreakPage() {
 
       const dateTime = new Date(`${formData.date}T${formData.time}`);
       
-      const updateData = {
+      const updateData: any = {
         title: formData.title,
         description: formData.description,
         date: Timestamp.fromDate(dateTime),
@@ -99,6 +106,11 @@ export default function EditBreakPage() {
         instagramURL: formData.instagramURL || null,
         isActive: formData.isActive,
       };
+      
+      // Include spotPrices if any custom prices are set
+      if (Object.keys(spotPrices).length > 0) {
+        updateData.spotPrices = spotPrices;
+      }
 
       const breakRef = doc(db, "breaks", breakId);
       await updateDoc(breakRef, updateData);
@@ -274,6 +286,86 @@ export default function EditBreakPage() {
                   </span>
                 </label>
               </div>
+            </div>
+          </div>
+
+          {/* Spot Pricing */}
+          <div className="bg-surface p-6 rounded-lg border border-border">
+            <h2 className="text-xl font-semibold text-text-primary mb-4">Custom Spot Pricing</h2>
+            <p className="text-sm text-text-secondary mb-4">
+              Set custom prices for individual spots. Leave blank to use default price (${formData.pricePerSpot}).
+            </p>
+            
+            <div className="grid grid-cols-5 gap-3">
+              {Array.from({ length: parseInt(formData.totalSpots) || 0 }, (_, i) => i + 1).map((spotNum) => {
+                const spotPrice = spotPrices[spotNum];
+                const isClaimed = breakData && breakData.participants && breakData.participants.includes(spotNum.toString());
+                
+                return (
+                  <div key={spotNum} className="relative">
+                    <label className="block text-xs font-medium text-text-primary mb-1">
+                      Spot {spotNum}
+                      {isClaimed && <span className="ml-1 text-green-500">✓</span>}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder={formData.pricePerSpot}
+                        value={spotPrice || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSpotPrices(prev => {
+                            if (val === "") {
+                              const newPrices = { ...prev };
+                              delete newPrices[spotNum];
+                              return newPrices;
+                            }
+                            return { ...prev, [spotNum]: parseFloat(val) };
+                          });
+                        }}
+                        disabled={isClaimed}
+                        className={`w-full pl-7 pr-3 py-2 bg-background border rounded-lg text-text-primary text-sm ${
+                          isClaimed ? 'opacity-50 cursor-not-allowed' : 'border-border'
+                        } ${spotPrice ? 'border-primary' : 'border-border'}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const allSpots = Array.from({ length: parseInt(formData.totalSpots) || 0 }, (_, i) => i + 1);
+                  const price = prompt("Set all unclaimed spots to what price?");
+                  if (price && !isNaN(parseFloat(price))) {
+                    const newPrices = { ...spotPrices };
+                    allSpots.forEach(spotNum => {
+                      const isClaimed = breakData && breakData.participants && breakData.participants.includes(spotNum.toString());
+                      if (!isClaimed) {
+                        newPrices[spotNum] = parseFloat(price);
+                      }
+                    });
+                    setSpotPrices(newPrices);
+                  }
+                }}
+                className="px-4 py-2 bg-background border border-border text-text-primary rounded-lg text-sm hover:bg-surface-hover transition"
+              >
+                Bulk Set All
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setSpotPrices({})}
+                className="px-4 py-2 bg-background border border-border text-text-primary rounded-lg text-sm hover:bg-surface-hover transition"
+              >
+                Clear All Custom Prices
+              </button>
             </div>
           </div>
 

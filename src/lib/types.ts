@@ -30,6 +30,7 @@ export interface Break {
   description: string;
   date: Timestamp;
   pricePerSpot: number;
+  spotPrices?: { [spotNumber: number]: number }; // Custom pricing per spot (overrides pricePerSpot)
   totalSpots: number;
   claimedSpots: number;
   breakFormat: "Pick Your Team" | "Random Team" | "Random Number" | "Custom";

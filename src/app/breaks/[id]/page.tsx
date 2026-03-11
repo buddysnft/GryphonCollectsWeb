@@ -66,13 +66,20 @@ export default function BreakDetailPage() {
 
     setCheckingOut(true);
     try {
+      // Calculate individual spot prices for checkout
+      const spotPricesForCheckout: { [key: number]: number } = {};
+      selectedSpots.forEach(spotNum => {
+        spotPricesForCheckout[spotNum] = getSpotPrice(spotNum);
+      });
+      
       const response = await fetch("/api/checkout/break", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           breakId,
           spots: selectedSpots,
-          pricePerSpot: breakData!.pricePerSpot,
+          pricePerSpot: breakData!.pricePerSpot, // Default price (for backwards compatibility)
+          spotPrices: spotPricesForCheckout, // Individual prices
           breakTitle: breakData!.title,
         }),
       });
@@ -109,7 +116,17 @@ export default function BreakDetailPage() {
   }
 
   const spotsRemaining = breakData.totalSpots - breakData.claimedSpots;
-  const totalPrice = selectedSpots.length * breakData.pricePerSpot;
+  
+  // Calculate total price using individual spot prices if available
+  const totalPrice = selectedSpots.reduce((sum, spotNum) => {
+    const spotPrice = breakData.spotPrices?.[spotNum] || breakData.pricePerSpot;
+    return sum + spotPrice;
+  }, 0);
+  
+  // Helper function to get price for a specific spot
+  const getSpotPrice = (spotNumber: number) => {
+    return breakData.spotPrices?.[spotNumber] || breakData.pricePerSpot;
+  };
 
   return (
     <div className="min-h-screen py-6 sm:py-8 px-4 sm:px-6">
@@ -200,6 +217,8 @@ export default function BreakDetailPage() {
                   const isSelected = selectedSpots.includes(spotNumber);
                   const spotLabel = breakData.spotLabels?.[spotNumber] || spotNumber.toString();
                   const hasCustomLabel = breakData.spotLabels?.[spotNumber];
+                  const spotPrice = getSpotPrice(spotNumber);
+                  const hasCustomPrice = breakData.spotPrices?.[spotNumber] !== undefined;
 
                   return (
                     <button
@@ -207,13 +226,13 @@ export default function BreakDetailPage() {
                       onClick={() => !isClaimed && toggleSpot(spotNumber)}
                       disabled={isClaimed}
                       className={`
-                        ${hasCustomLabel ? 'min-h-[60px] sm:min-h-[70px] py-3 px-2' : 'min-h-[44px] sm:min-h-[48px] aspect-square'} 
+                        ${hasCustomLabel ? 'min-h-[70px] sm:min-h-[80px] py-3 px-2' : 'min-h-[60px] sm:min-h-[65px] py-2 px-1'} 
                         rounded-lg font-semibold transition-all duration-200
                         ${hasCustomLabel ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'}
                         ${isClaimed ? 'bg-gray-900/50 text-gray-600 cursor-not-allowed relative overflow-hidden' : ''}
                         ${!isClaimed && !isSelected ? 'bg-background border-2 border-border text-text-primary hover:border-primary hover:bg-primary/10 active:scale-95' : ''}
                         ${isSelected ? 'bg-primary text-white ring-2 ring-primary ring-offset-2 ring-offset-surface scale-105 shadow-lg' : ''}
-                        ${hasCustomLabel ? 'flex flex-col items-center justify-center gap-0.5' : 'flex items-center justify-center'}
+                        flex flex-col items-center justify-center gap-0.5
                         touch-manipulation
                       `}
                       style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -225,13 +244,20 @@ export default function BreakDetailPage() {
                           </svg>
                         </div>
                       )}
-                      {!isClaimed && hasCustomLabel ? (
+                      {!isClaimed && (
                         <>
-                          <span className="text-[10px] sm:text-xs text-current opacity-60">#{spotNumber}</span>
-                          <span className="font-bold leading-tight text-center break-words">{spotLabel}</span>
+                          {hasCustomLabel ? (
+                            <>
+                              <span className="text-[10px] sm:text-xs text-current opacity-60">#{spotNumber}</span>
+                              <span className="font-bold leading-tight text-center break-words">{spotLabel}</span>
+                            </>
+                          ) : (
+                            <span className="text-lg font-bold">{spotNumber}</span>
+                          )}
+                          <span className={`text-[10px] sm:text-xs font-semibold ${hasCustomPrice ? 'text-yellow-400' : 'opacity-70'}`}>
+                            ${spotPrice.toFixed(2)}
+                          </span>
                         </>
-                      ) : (
-                        !isClaimed && <span>{spotNumber}</span>
                       )}
                     </button>
                   );
