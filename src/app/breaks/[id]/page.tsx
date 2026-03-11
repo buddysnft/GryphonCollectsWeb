@@ -112,7 +112,7 @@ export default function BreakDetailPage() {
   const totalPrice = selectedSpots.length * breakData.pricePerSpot;
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-6 sm:py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <button
@@ -194,7 +194,7 @@ export default function BreakDetailPage() {
 
               {/* Spot Grid */}
               {/* Dynamic grid: more columns for numbers-only, fewer for team/player names */}
-              <div className={`grid ${breakData.spotLabels ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-6 sm:grid-cols-8'} gap-2 mb-6 max-h-96 overflow-y-auto`}>
+              <div className={`grid ${breakData.spotLabels ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-5 sm:grid-cols-6 md:grid-cols-8'} gap-2 sm:gap-3 mb-6 max-h-96 overflow-y-auto p-1`}>
                 {Array.from({ length: breakData.totalSpots }, (_, i) => i + 1).map((spotNumber) => {
                   const isClaimed = breakData.claimedSpots >= spotNumber;
                   const isSelected = selectedSpots.includes(spotNumber);
@@ -207,22 +207,31 @@ export default function BreakDetailPage() {
                       onClick={() => !isClaimed && toggleSpot(spotNumber)}
                       disabled={isClaimed}
                       className={`
-                        ${hasCustomLabel ? 'aspect-[3/2] py-3 px-2' : 'aspect-square'} 
-                        rounded-lg font-semibold transition
-                        ${hasCustomLabel ? 'text-xs' : 'text-sm'}
-                        ${isClaimed ? 'bg-background text-text-muted cursor-not-allowed' : ''}
-                        ${!isClaimed && !isSelected ? 'bg-background text-text-primary hover:bg-primary hover:text-white' : ''}
-                        ${isSelected ? 'bg-primary text-white ring-2 ring-primary ring-offset-2 ring-offset-surface' : ''}
-                        ${hasCustomLabel ? 'flex flex-col items-center justify-center gap-0.5' : ''}
+                        ${hasCustomLabel ? 'min-h-[60px] sm:min-h-[70px] py-3 px-2' : 'min-h-[44px] sm:min-h-[48px] aspect-square'} 
+                        rounded-lg font-semibold transition-all duration-200
+                        ${hasCustomLabel ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'}
+                        ${isClaimed ? 'bg-gray-900/50 text-gray-600 cursor-not-allowed relative overflow-hidden' : ''}
+                        ${!isClaimed && !isSelected ? 'bg-background border-2 border-border text-text-primary hover:border-primary hover:bg-primary/10 active:scale-95' : ''}
+                        ${isSelected ? 'bg-primary text-white ring-2 ring-primary ring-offset-2 ring-offset-surface scale-105 shadow-lg' : ''}
+                        ${hasCustomLabel ? 'flex flex-col items-center justify-center gap-0.5' : 'flex items-center justify-center'}
+                        touch-manipulation
                       `}
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
-                      {hasCustomLabel ? (
+                      {isClaimed && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                      )}
+                      {!isClaimed && hasCustomLabel ? (
                         <>
-                          <span className="text-[10px] text-text-muted opacity-70">#{spotNumber}</span>
+                          <span className="text-[10px] sm:text-xs text-current opacity-60">#{spotNumber}</span>
                           <span className="font-bold leading-tight text-center break-words">{spotLabel}</span>
                         </>
                       ) : (
-                        spotNumber
+                        !isClaimed && <span>{spotNumber}</span>
                       )}
                     </button>
                   );
@@ -246,9 +255,20 @@ export default function BreakDetailPage() {
                 <button
                   onClick={handleCheckout}
                   disabled={selectedSpots.length === 0 || checkingOut}
-                  className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-primary text-white min-h-[44px] sm:min-h-[48px] py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:opacity-90 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg touch-manipulation"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  {checkingOut ? 'Processing...' : `Checkout (${selectedSpots.length} ${selectedSpots.length === 1 ? 'Spot' : 'Spots'})`}
+                  {checkingOut ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    `Checkout ${selectedSpots.length > 0 ? `(${selectedSpots.length} ${selectedSpots.length === 1 ? 'Spot' : 'Spots'})` : ''}`
+                  )}
                 </button>
 
                 <p className="text-xs text-text-muted text-center">
