@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import Shippo from "shippo";
 
-const shippo = new Shippo({
-  apiKeyHeader: process.env.SHIPPO_API_TOKEN!,
-});
+// Dynamic import for Shippo SDK
+const Shippo = require("shippo");
+
+const shippo = new Shippo(process.env.SHIPPO_API_TOKEN!);
 
 // Gryphon Collects return address (from Tyler)
 const FROM_ADDRESS = {
