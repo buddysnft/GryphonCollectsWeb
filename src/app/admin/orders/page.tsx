@@ -61,6 +61,60 @@ export default function OrdersPage() {
     }
   }
 
+  async function createShippingLabel(order: any) {
+    if (!order.shippingAddress) {
+      alert("❌ No shipping address on this order");
+      return;
+    }
+
+    if (!confirm("Create shipping label via Shippo?")) return;
+
+    setUpdating(order.id);
+    try {
+      const response = await fetch("/api/shippo/create-label", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          shippingAddress: order.shippingAddress,
+          orderTotal: order.total || order.amount,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create label");
+      }
+
+      // Update order with tracking + label
+      if (!db) throw new Error("Firestore not initialized");
+      await updateDoc(doc(db, "orders", order.id), {
+        status: "shipped",
+        trackingNumber: data.trackingNumber,
+        trackingUrl: data.trackingUrl,
+        shippingLabelUrl: data.labelUrl,
+        shippingCarrier: data.carrier,
+        shippingService: data.service,
+        shippingCost: data.cost,
+        shippedAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+
+      await loadOrders();
+
+      // Open label in new tab
+      window.open(data.labelUrl, "_blank");
+
+      alert(`✅ Label created! Tracking: ${data.trackingNumber}\nCost: $${data.cost}\nLabel opened in new tab.`);
+    } catch (error: any) {
+      console.error("Error creating label:", error);
+      alert(`❌ Failed to create label: ${error.message}`);
+    } finally {
+      setUpdating(null);
+    }
+  }
+
   async function markAsShipped(orderId: string) {
     const tracking = prompt("Enter tracking number:");
     if (!tracking) return;
@@ -226,18 +280,46 @@ export default function OrdersPage() {
 
                 {/* Shipping Section */}
                 <div className="mt-4 pt-4 border-t border-border">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <div>
                       <div className="text-sm font-semibold text-text-primary mb-1">
                         Shipping
                       </div>
                       {order.trackingNumber ? (
                         <div className="text-sm">
-                          <div className="text-text-secondary">Tracking: <span className="font-mono text-primary">{order.trackingNumber}</span></div>
+                          <div className="text-text-secondary">
+                            Tracking: <span className="font-mono text-primary">{order.trackingNumber}</span>
+                            {order.trackingUrl && (
+                              <a
+                                href={order.trackingUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-2 text-primary hover:underline text-xs"
+                              >
+                                Track →
+                              </a>
+                            )}
+                          </div>
+                          {order.shippingCarrier && order.shippingService && (
+                            <div className="text-xs text-text-muted mt-1">
+                              {order.shippingCarrier} {order.shippingService}
+                              {order.shippingCost && ` • $${order.shippingCost}`}
+                            </div>
+                          )}
                           {order.shippedAt && (
                             <div className="text-xs text-text-muted mt-1">
                               Shipped: {formatDate(order.shippedAt)}
                             </div>
+                          )}
+                          {order.shippingLabelUrl && (
+                            <a
+                              href={order.shippingLabelUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline mt-1 inline-block"
+                            >
+                              View Label PDF →
+                            </a>
                           )}
                         </div>
                       ) : (
@@ -245,15 +327,38 @@ export default function OrdersPage() {
                       )}
                     </div>
                     {order.status !== 'shipped' && order.status !== 'test' && (
-                      <button
-                        onClick={() => markAsShipped(order.id)}
-                        disabled={updating === order.id}
-                        className="bg-primary text-background px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
-                      >
-                        {updating === order.id ? 'Updating...' : 'Mark as Shipped'}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => createShippingLabel(order)}
+                          disabled={updating === order.id || !order.shippingAddress}
+                          className="bg-success text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          title={order.shippingAddress ? "Create Shippo label" : "No shipping address"}
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          {updating === order.id ? 'Creating...' : 'Create Label'}
+                        </button>
+                        <button
+                          onClick={() => markAsShipped(order.id)}
+                          disabled={updating === order.id}
+                          className="bg-primary text-background px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
+                        >
+                          {updating === order.id ? 'Updating...' : 'Manual Entry'}
+                        </button>
+                      </div>
                     )}
                   </div>
+                  {order.shippingAddress && (
+                    <div className="text-xs text-text-muted mt-2 p-2 bg-background rounded">
+                      {order.shippingAddress.name && <div>{order.shippingAddress.name}</div>}
+                      <div>{order.shippingAddress.street1}</div>
+                      {order.shippingAddress.street2 && <div>{order.shippingAddress.street2}</div>}
+                      <div>
+                        {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Stripe Session ID */}
