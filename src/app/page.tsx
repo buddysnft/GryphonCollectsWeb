@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { getBreaks } from "@/lib/firestore";
 import BreakCard from "@/components/BreakCard";
 import Hero from "@/components/Hero";
+import FeaturedBreaksCarousel from "@/components/FeaturedBreaksCarousel";
+import SocialProof from "@/components/SocialProof";
 import NewsletterSignup from "@/components/NewsletterSignup";
 import { BreakCardSkeleton } from "@/components/LoadingSkeletons";
 import { brandConfig } from "@/config/brand";
@@ -71,28 +73,17 @@ export default function Home() {
       {/* Hero Section */}
       <Hero />
 
-      {/* Next Break Countdown - Only show if there is a next break */}
-      {nextBreak && (
-        <section className="py-12 px-4 bg-surface border-y border-border">
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-8 text-center">
-              <p className="text-sm font-semibold text-primary mb-2 uppercase tracking-wide">Next Break</p>
-              <h2 className="text-2xl md:text-3xl font-bold text-text-primary mb-3">
-                {nextBreak.title}
-              </h2>
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-6">
-                {timeUntilNext}
-              </div>
-              <Link
-                href={`/breaks/${nextBreak.id}`}
-                className="inline-block bg-primary text-background px-8 py-4 rounded-lg font-bold hover:opacity-90 transition text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Reserve Your Spot →
-              </Link>
-            </div>
+      {/* Featured Breaks Carousel */}
+      {!loading && upcomingBreaks.length > 0 && (
+        <section className="py-16 px-4">
+          <div className="max-w-7xl mx-auto">
+            <FeaturedBreaksCarousel breaks={upcomingBreaks.slice(0, 3)} />
           </div>
         </section>
       )}
+
+      {/* Social Proof */}
+      <SocialProof />
 
       {/* Upcoming Breaks */}
       <section className="py-16 px-4">
