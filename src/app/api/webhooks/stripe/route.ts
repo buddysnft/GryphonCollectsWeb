@@ -102,10 +102,26 @@ async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
       const breakId = session.metadata?.breakId;
       const spots = JSON.parse(session.metadata?.spots || "[]");
       const pricePerSpot = parseFloat(session.metadata?.pricePerSpot || "0");
+      const holdForPickup = session.metadata?.holdForPickup === "true";
 
-      console.log("Break order data:", { breakId, spots, pricePerSpot });
+      console.log("Break order data:", { breakId, spots, pricePerSpot, holdForPickup });
 
-      const orderData = {
+      // Extract shipping address from Stripe if provided
+      let shippingAddress = null;
+      if (session.shipping_details?.address && !holdForPickup) {
+        const addr = session.shipping_details.address;
+        shippingAddress = {
+          name: session.shipping_details.name || session.customer_details?.name || "",
+          street: addr.line1 || "",
+          apt: addr.line2 || "",
+          city: addr.city || "",
+          state: addr.state || "",
+          zip: addr.postal_code || "",
+          country: addr.country || "US",
+        };
+      }
+
+      const orderData: any = {
         type: "break",
         breakId,
         spots,
@@ -114,11 +130,19 @@ async function handleSuccessfulCheckout(session: Stripe.Checkout.Session) {
         stripePaymentIntentId: session.payment_intent as string,
         customerEmail: session.customer_details?.email || null,
         customerName: session.customer_details?.name || null,
-        total: session.amount_total! / 100,
-        status: "confirmed" as const,
+        amount: session.amount_total! / 100, // Total including tax
+        amountSubtotal: session.amount_subtotal! / 100, // Subtotal before tax
+        taxAmount: (session.total_details?.amount_tax || 0) / 100, // Sales tax collected
+        status: holdForPickup ? "held" : "confirmed",
+        holdForPickup: holdForPickup || false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+
+      // Add shipping address if not holding for pickup
+      if (shippingAddress) {
+        orderData.shippingAddress = shippingAddress;
+      }
 
       console.log("Creating order in Firestore...");
       await adminDb.collection("orders").add(orderData);

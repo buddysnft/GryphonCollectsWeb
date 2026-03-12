@@ -17,6 +17,7 @@ export default function BreakDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedSpots, setSelectedSpots] = useState<number[]>([]);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [holdForPickup, setHoldForPickup] = useState(false);
 
   useEffect(() => {
     async function loadBreak() {
@@ -81,6 +82,7 @@ export default function BreakDetailPage() {
           pricePerSpot: breakData!.pricePerSpot, // Default price (for backwards compatibility)
           spotPrices: spotPricesForCheckout, // Individual prices
           breakTitle: breakData!.title,
+          holdForPickup, // Local pickup option
         }),
       });
 
@@ -276,6 +278,24 @@ export default function BreakDetailPage() {
                 <div className="flex justify-between text-lg font-bold">
                   <span className="text-text-primary">Total:</span>
                   <span className="text-primary">${totalPrice.toFixed(2)}</span>
+                </div>
+
+                {/* Local Pickup Option */}
+                <div className="bg-background border border-border rounded-lg p-4">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={holdForPickup}
+                      onChange={(e) => setHoldForPickup(e.target.checked)}
+                      className="mt-1 w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <div className="font-semibold text-text-primary">Hold for Local Pickup</div>
+                      <div className="text-sm text-text-secondary mt-1">
+                        Skip shipping charge. Cards will be held for you to pick up or ship later.
+                      </div>
+                    </div>
+                  </label>
                 </div>
 
                 <button
